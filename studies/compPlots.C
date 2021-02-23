@@ -264,7 +264,7 @@ void plotterJets(TTree *nano, TTree *cms4) {
     TH1F* cms4pt = new TH1F("cms4pt", titlept, 100, 0, 100);
     TH1F* cms4eta = new TH1F("cms4eta", titleeta, 100, -4, 4);
     TH1F* cms4phi = new TH1F("cms4phi", titlephi, 100, -4, 4);
-    TH1F* cms4btag = new TH1F("cms4btag", titlebtag, 100, 0, 1);
+    TH1F* cms4btag = new TH1F("cms4btag", titlebtag, 100, -.1, 1.1);
     TBranch *cms4br = 0;
     cms4->SetBranchAddress("jets_pt", &jets_pt, &cms4br);
     cms4->SetBranchAddress("jets_eta", &jets_eta, &cms4br);
@@ -291,7 +291,7 @@ void plotterJets(TTree *nano, TTree *cms4) {
     TH1F* nanopt = new TH1F("nanopt", titlept, 100, 0, 100);
     TH1F* nanoeta = new TH1F("nanoeta", titleeta, 100, -4, 4);
     TH1F* nanophi = new TH1F("nanophi", titlephi, 100, -4, 4);
-    TH1F* nanobtag = new TH1F("nanobtag", titlebtag, 100, 0, 1);
+    TH1F* nanobtag = new TH1F("nanobtag", titlebtag, 100, -.1, 1.1);
     TBranch *nanobr = 0;
     nano->SetBranchAddress("jets_pt", &jets_pt, &nanobr);
     nano->SetBranchAddress("jets_eta", &jets_eta, &nanobr);

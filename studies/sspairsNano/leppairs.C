@@ -267,7 +267,7 @@ int LeppairsTree::fillBranches() {
         jets_eta.push_back(Jet_eta().at(i));
         jets_phi.push_back(Jet_phi().at(i));
         jets_id.push_back(Jet_jetId().at(i));
-        jets_btag.push_back(Jet_btagDeepC().at(i));
+        jets_btag.push_back(Jet_btagDeepB().at(i));
     }
 
     Leptons leps;
