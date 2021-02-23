@@ -2,6 +2,8 @@
 Nano nt;
 
 void Nano::Init(TTree *tree) {
+    b_LHEWeight_mg_reweighting_ = tree->GetBranch("LHEWeight_mg_reweighting");
+    if (b_LHEWeight_mg_reweighting_) { b_LHEWeight_mg_reweighting_->SetAddress(&LHEWeight_mg_reweighting_); }
     b_CaloMET_phi_ = tree->GetBranch("CaloMET_phi");
     if (b_CaloMET_phi_) { b_CaloMET_phi_->SetAddress(&CaloMET_phi_); }
     b_CaloMET_pt_ = tree->GetBranch("CaloMET_pt");
@@ -4489,6 +4491,7 @@ Bool_t Nano::isData() {
 
 void Nano::GetEntry(unsigned int idx) {
     index = idx;
+    loaded_LHEWeight_mg_reweighting_ = false;
     loaded_CaloMET_phi_ = false;
     loaded_CaloMET_pt_ = false;
     loaded_CaloMET_sumEt_ = false;
@@ -6735,6 +6738,15 @@ void Nano::GetEntry(unsigned int idx) {
     loaded_run_ = false;
 }
 
+const vector<float> &Nano::LHEWeight_mg_reweighting() {
+    if (!loaded_LHEWeight_mg_reweighting_) {
+        if (!b_LHEWeight_mg_reweighting_) throw std::runtime_error("LHEWeight_mg_reweighting branch doesn't exist");
+        int bytes = b_LHEWeight_mg_reweighting_->GetEntry(index);
+        v_LHEWeight_mg_reweighting_ = vector<float>(LHEWeight_mg_reweighting_,LHEWeight_mg_reweighting_+bytes/sizeof(LHEWeight_mg_reweighting_[0]));
+        loaded_LHEWeight_mg_reweighting_ = true;
+    }
+    return v_LHEWeight_mg_reweighting_;
+}
 const float &Nano::CaloMET_phi() {
     if (!loaded_CaloMET_phi_) {
         if (!b_CaloMET_phi_) throw std::runtime_error("CaloMET_phi branch doesn't exist");
@@ -25201,6 +25213,7 @@ const UInt_t &Nano::run() {
 }
 
 namespace tas {
+    const vector<float> &LHEWeight_mg_reweighting() { return nt.LHEWeight_mg_reweighting(); }
     const float &CaloMET_phi() { return nt.CaloMET_phi(); }
     const float &CaloMET_pt() { return nt.CaloMET_pt(); }
     const float &CaloMET_sumEt() { return nt.CaloMET_sumEt(); }
@@ -27448,7 +27461,8 @@ namespace tas {
     const Int_t &year() { return nt.year(); }
     Bool_t isData() { return nt.isData(); }
     vector<float> GetVF(const string &name) {
-        if (name == "CorrT1METJet_area") return nt.CorrT1METJet_area();
+        if (name == "LHEWeight_mg_reweighting") return nt.LHEWeight_mg_reweighting();
+        else if (name == "CorrT1METJet_area") return nt.CorrT1METJet_area();
         else if (name == "CorrT1METJet_eta") return nt.CorrT1METJet_eta();
         else if (name == "CorrT1METJet_muonSubtrFactor") return nt.CorrT1METJet_muonSubtrFactor();
         else if (name == "CorrT1METJet_phi") return nt.CorrT1METJet_phi();

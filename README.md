@@ -1,9 +1,11 @@
 ### Environment & setup
 ```bash
-cd /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/cmssw/CMSSW_10_2_9/ ; cmsenv ; cd -
 git clone https://github.com/cmstas/NanoTools
-cd NanoTools/NanoCORE
+cd NanoTools/
+cd /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/cmssw/CMSSW_10_2_9/ ; cmsenv ; cd -
+cd NanoCORE
 make test -j12
+cd ..
 ```
 
 ### Unit tests

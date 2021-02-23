@@ -6,6 +6,7 @@ LIB=NANO_CORE.so
 
 $(LIB): $(OBJECTS) 
 	$(LD) $(LDFLAGS) $(SOFLAGS) $(OBJECTS) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
+	ln -sf $(LIB) lib$(LIB)
 
 %.o:	%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ -fno-var-tracking
