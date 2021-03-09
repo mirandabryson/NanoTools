@@ -118,9 +118,9 @@ struct HistCol {
 
 // Update cut information, histograms
 void cut_info (int &cut, int &count, HistCol &hist, string region, int lep1id, int lep2id, float weight) {
+    hist.Fill(region, lep1id, lep2id, count, weight);
     cut++;
     count++;
-    hist.Fill(region, lep1id, lep2id, count, weight);
     return;
 }
 
@@ -178,7 +178,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     // Histograms of interest
     vector<HistCol*> registry;
     vector<HistCol2D*> registry2D;
-    HistCol   h_counts         (regions, "count"            , 14,  0.5 ,14.5 ,  &registry);
+    HistCol   h_counts         (regions, "count"            , 14, -0.5 ,14.5 ,  &registry);
     HistCol   h_nleps          (regions, "nleps"            ,  5, -0.5 , 4.5 ,  &registry);
     HistCol   h_njets          (regions, "njets"            , 13, -0.5 ,12.5 ,  &registry);
     HistCol   h_nbtags         (regions, "nbtags"           , 10, -0.5 , 9.5 ,  &registry);
@@ -253,21 +253,28 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             if (ptleps.size() < 2) {continue;} 
             cut_info(surviveCuts[1], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
+            // Tight leptons
+            Leptons looseleps;
+            for (int i = 0; i < ptleps.size(); i++) {
+                if (ptleps[i].idlevel() >= SS::IDfakable) {looseleps.push_back(ptleps[i]);}
+            }
+            if (looseleps.size() < 2) {continue;}
+            cut_info(surviveCuts[2], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
             // Tight leptons
             Leptons tightleps;
-            for (int i = 0; i < ptleps.size(); i++) {
-                if (ptleps[i].idlevel() == 4) {tightleps.push_back(ptleps[i]);}
+            for (int i = 0; i < looseleps.size(); i++) {
+                if (looseleps[i].idlevel() == SS::IDtight) {tightleps.push_back(ptleps[i]);}
             }
             int nleps = tightleps.size();
             if (nleps < 2) {continue;}
-            cut_info(surviveCuts[2], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[3], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // Make pairs of leptons
             vector<Hyp> pairs;
             Hyp tmppair;
-            for (int i = 0; i < (nleps - 1); i++){
+            for (int i = 0; i < nleps; i++){
                 for (int j = 0; j < nleps; j++){
                     tmppair.first = tightleps[i];
                     tmppair.second = tightleps[j];
@@ -285,20 +292,23 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 else {ospairs.push_back(pairs[i]);}
             }
             if (sspairs.size() < 1) {continue;}
-            cut_info(surviveCuts[3], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[4], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // Made extra Z
+            // Used code from getBestHyp
             float Zmass = 91.2;
+            float Zcut = 15.0;
             bool extraZ = false;
-            for (int i = 0; i < ospairs.size(); i++) {
-                if (fabs((ospairs[i].first.p4() + ospairs[i].second.p4()).mass() - Zmass) < 15) {
-                    extraZ = true;
-                    break;
+            for (int i = 0; i < leps.size(); i++) {
+                for (int j = i + 1; j < leps.size(); j++) {
+                    auto zResult = makesResonance(leps, leps[i], leps[j], Zmass, Zcut);
+                    extraZ = zResult.first >= 0;
+                    if (extraZ) {break;}
                 }
             }
             if (extraZ) {continue;}
-            cut_info(surviveCuts[4], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[5], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // Min 2 jets
@@ -308,12 +318,12 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             Jets jets;
             tie(njets, nbtags, ht) = getJetInfo(leps, jets);
             if (njets < 2) {continue;}
-            cut_info(surviveCuts[5], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[6], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // No btags
             if (nbtags > 0) {continue;}
-            cut_info(surviveCuts[6], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[7], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // Make DiJet pairs
@@ -334,7 +344,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 if (fabs((dijets[i].first.p4() + dijets[i].second.p4()).mass())) {jets120.push_back(dijets[i]);}
             }
             if (jets120.size() < 1) {continue;}
-            cut_info(surviveCuts[7], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[8], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
 
@@ -381,17 +391,17 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 if (fabs((jets120[i].first.p4() + jets120[i].second.p4()).mass())) {jets500.push_back(jets120[i]);}
             }
             if (jets500.size() < 1) {continue;}
-            cut_info(surviveCuts[8], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[9], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // Min 3 jets
             if (njets < 3) {continue;}
-            cut_info(surviveCuts[9], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[10], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
 
             // Min 4 jets
             if (njets < 4) {continue;}
-            cut_info(surviveCuts[10], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[11], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
 
             fill_region("bkgdcuts", weight);
 
@@ -411,15 +421,16 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     cout << "Debugs" << endl;
     printf ("\nTotal Events: %i \n", surviveCuts[0]);
     printf ("Pt Minimum: %i \n", surviveCuts[1]);
-    printf ("Tight Selection: %i \n", surviveCuts[2]);
-    printf ("SS Pairs: %i \n", surviveCuts[3]);
-    printf ("Close to Z: %i \n", surviveCuts[4]);
-    printf ("Min 2 Jets: %i \n", surviveCuts[5]);
-    printf ("No bTags: %i \n", surviveCuts[6]);
-    printf ("Invar Mass > 120: %i \n", surviveCuts[7]);
-    printf ("Invar Mass > 500: %i \n", surviveCuts[8]);
-    printf ("Min 3 Jets: %i \n", surviveCuts[9]);
-    printf ("Min 4 Jets: %i \n", surviveCuts[10]);
+    printf ("Loose Selection: %i \n", surviveCuts[2]);
+    printf ("Tight Selection: %i \n", surviveCuts[3]);
+    printf ("SS Pairs: %i \n", surviveCuts[4]);
+    printf ("Close to Z: %i \n", surviveCuts[5]);
+    printf ("Min 2 Jets: %i \n", surviveCuts[6]);
+    printf ("No bTags: %i \n", surviveCuts[7]);
+    printf ("Invar Mass > 120: %i \n", surviveCuts[8]);
+    printf ("Invar Mass > 500: %i \n", surviveCuts[9]);
+    printf ("Min 3 Jets: %i \n", surviveCuts[10]);
+    printf ("Min 4 Jets: %i \n", surviveCuts[11]);
 
 
     // Wrap up
