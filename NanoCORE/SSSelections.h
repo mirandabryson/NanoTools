@@ -40,6 +40,33 @@ struct Lepton {
 typedef std::pair<Lepton, Lepton> Hyp;
 typedef std::vector<Lepton> Leptons;
 
+struct Jet {
+    Jet(unsigned int idx = 0) : idx_(idx) {
+        id_ = nt.Jet_jetId()[idx_];
+        pt_ = nt.Jet_pt()[idx_];
+        eta_ = nt.Jet_eta()[idx_];
+        phi_ = nt.Jet_phi()[idx_];
+        p4_ = nt.Jet_p4()[idx_];
+    }
+    int id() { return id_; }
+    bool is_btag() { return false; } // { return ((pt_ > 25.0) && (Jet_btagDeepB()[idx_] > 0.4941)); }
+    unsigned int idx() { return idx_; }
+    LorentzVector p4() { return p4_; }
+    float pt() { return pt_; }
+    float eta() { return eta_; }
+    float phi() { return phi_; }
+
+  private:
+    int id_;
+    float pt_ = 0.;
+    float eta_ = 0.;
+    float phi_ = 0.;
+    LorentzVector p4_;
+    unsigned int idx_;
+};
+typedef std::pair<Jet, Jet> DiJet;
+typedef std::vector<Jet> Jets;
+
 std::ostream &operator<<(std::ostream &os, Lepton &lep) {
     std::string lepstr = (abs(lep.id()) == 11) ? "Electron" : "Muon";
     return os << "<" << lepstr << " id=" << std::showpos << setw(3) << lep.id() << std::noshowpos << ", idx=" << setw(2)
@@ -51,7 +78,7 @@ template <typename T1, typename T2> std::ostream &operator<<(std::ostream &os, s
 }
 
 vector<Lepton> getLeptons();
-std::tuple<int, int, float> getJetInfo(vector<Lepton> &leps, int variation = 0);
+std::tuple<int, int, float> getJetInfo(vector<Lepton> &leps, vector<Jet> &jets, int variation = 0);
 std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, float mass, float window);
 std::pair<int, Hyp> getBestHyp(vector<Lepton> &leptons, bool verbose);
 bool isLeptonLevel(SS::IDLevel idlevel, int id, int idx);
