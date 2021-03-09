@@ -1,0 +1,16 @@
+int event
+int run
+int lumi
+int TotalEvents
+int MinPt
+int Loose
+int FO
+int Tight
+int SSpairs
+int NoExtraZ
+int Min2Jets
+int Nobtags
+int JetMass120
+int JetMass500
+int Min3Jets
+int Min4Jets
