@@ -1,4 +1,5 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
+// Various Root Functions
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
@@ -18,7 +19,7 @@
 #include "TCanvas.h"
 #include "TRandom.h"
 
-
+// Funtions used in analysis
 #include "/home/users/ian/NanoTools/NanoCORE/Nano.h"
 #include "/home/users/ian/NanoTools/NanoCORE/SSSelections.cc"
 #include "/home/users/ian/NanoTools/NanoCORE/MetSelections.cc"
@@ -28,6 +29,9 @@
 //#include "/home/users/ian/NanoTools/studies/sspairsanalysis/sspairs.C"
 #include "/home/users/ian/NanoTools/NanoCORE/tqdm.h"
 
+#include "/home/users/ian/VBSAna/analysis/misc/common_utils.h"
+
+// Output
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -103,9 +107,9 @@ struct HistCol {
         } else if ((abs(id1) == 11 and abs(id2) == 13) or
                 (abs(id1) == 13 and abs(id2) == 11)) {
             em[region].Fill(val, weight);
-        } else {
+        }/* else {
             cout << "These ids are garbage: (" << id1 << ", " << id2 << ")\n";
-        }
+        }*/
     }
 
     void Write() {
@@ -117,9 +121,10 @@ struct HistCol {
 };
 
 // Update cut information, histograms
-void cut_info (int &cut, int &count, HistCol &hist, string region, int lep1id, int lep2id, float weight) {
+void cut_info (int &cut, float &wcut, int &count, HistCol &hist, string region, int lep1id, int lep2id, float weight) {
     hist.Fill(region, lep1id, lep2id, count, weight);
     cut++;
+    wcut+=weight;
     count++;
     return;
 }
@@ -146,6 +151,9 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     // Output
     TFile* out_tfile = new TFile("sspairs_data.root", "RECREATE");
 
+    bool doFlips = true;//options.Contains("doFlips");
+    bool doFakes = true;//options.Contains("doFakes");
+    
     // Debug files
     bool debug = false;
     ofstream dfile;
@@ -157,6 +165,18 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 
     // Set configuration parameters
     gconf.year = 2016;
+
+/*    int year;
+    float lumiAG = 0.;
+    bool is2016(false), is2017(false), is2018(false);
+    if (options.Contains("Data2016")) {
+        lumiAG = getLumi(2016);
+        year = 2016;
+        is2016 = true;
+    } else 
+*/
+
+
 
     // Custom TTree
 //    SSpairsTree* sspairs_tree = new SSpairsTree(2016);
@@ -197,6 +217,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     out_tree->Branch("counts", &tree_counts);
  
     int surviveCuts [] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    float weightedCut [] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
     // File looper
@@ -212,6 +233,12 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 //        nt.Init(tree, 2016);
         nt.SetYear(2016);
         nt.Init(tree);
+        // Get "total" genWeight
+        int normalWeight = 0;
+        for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
+            int weightMod = (nt.genWeight() > 0) ? 1 : -1;
+            normalWeight += weightMod;
+        }
         // Event loop
         for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 //            sspairs_tree->resetBranches();
@@ -221,21 +248,54 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             // Update progress
             nEventsTotal++;
             bar.progress(nEventsTotal, nEventsChain);
+
+            // Need funtion to deal with cross section
+            float xsec = 0.215;
+            float lumi16 = 35.922;
+            float lumi17 = 41.53;
+            float lumi18 = 59.71;
+            if (!isData()) {
+                int wsgn = (nt.genWeight() > 0) ? 1 : -1;
+                weight = wsgn * xsec / normalWeight * 1000;
+                if (nt.year() == 2016) {weight *= lumi16;}
+                else if (nt.year() == 2017) {weight *= lumi17;}
+                else if (nt.year() == 2018) {weight *= lumi18;}
+                else {cout << "No year, skipping event" << endl; continue;}
+            }
+
+
             // Fill event-level info
 //            sspairs_tree->event = nt.event();
 
             // Basic info
             int run = nt.run();
-            int lumi = luminosityBlock();
+            int lumi = nt.luminosityBlock();
 
             int counts = 1;
-            cut_info(surviveCuts[0], counts, h_counts, "ssbr", 11, 11, weight);
+//            cut_info(surviveCuts[0], weightedCut[0], scounts, h_counts, "ssbr", 11, 11, weight);
 
             // Get leptons, coninue if not enought to make a pair
             Leptons leps = getLeptons();
             if (leps.size() <= 1) {continue;}
 
 
+            /* Hyp Definitions, Priority Order 3, 6, 2, 1, 4
+             * 1: SS, loose-loose
+             * 2: SS, tight-loose (or loose-tight)
+             * 3: SS, tight-tight
+             * 4: OS, tight-tight
+             * 5: SS, inSituFR
+             * 6: SS, tight-tight and fails Z-veto (lies! hyp_class==6 != lep1good and lep2good)
+             */
+            auto bestHyp = getBestHyp(leps, false);
+            int hyp_class = bestHyp.first;
+            Lepton hyplep1 = bestHyp.second.first;
+            Lepton hyplep2 = bestHyp.second.second;
+            int lep1hypid = bestHyp.second.first.id();
+            int lep2hypid = bestHyp.second.second.id();
+
+            cut_info(surviveCuts[0], weightedCut[0], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            
 
             // Make sure leptons have the required min pt
             float eptcut = 25;
@@ -251,7 +311,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 }
             }
             if (ptleps.size() < 2) {continue;} 
-            cut_info(surviveCuts[1], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[1], weightedCut[1], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
             // Tight leptons
             Leptons looseleps;
@@ -259,7 +319,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 if (ptleps[i].idlevel() >= SS::IDfakable) {looseleps.push_back(ptleps[i]);}
             }
             if (looseleps.size() < 2) {continue;}
-            cut_info(surviveCuts[2], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[2], weightedCut[2], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
             // Tight leptons
             Leptons tightleps;
@@ -268,7 +328,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             }
             int nleps = tightleps.size();
             if (nleps < 2) {continue;}
-            cut_info(surviveCuts[3], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[3], weightedCut[3], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // Make pairs of leptons
@@ -292,7 +352,88 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 else {ospairs.push_back(pairs[i]);}
             }
             if (sspairs.size() < 1) {continue;}
-            cut_info(surviveCuts[4], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[4], weightedCut[4], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+
+            // Find 3rd lepton, (highest pt not part of the hyp pair)
+//            Lepton lep3;
+//            for (int i = 0; i < nleps; i++) {
+//                if
+//            }
+/*
+            // Fakes 
+            bool class6Fake = false;
+            if (doFakes) {
+                if (hyp_class == 6) {
+                    bool lep1_lowpt_veto = lep1pt < (abs(lep1id) == 11 ? 15 : 10);
+                    bool lep2_lowpt_veto = lep2pt < (abs(lep2id) == 11 ? 15 : 10);
+                    bool lep3_lowpt_veto = lep3pt < (abs(lep3id) == 11 ? 15 : 10);
+                    int nfakes = 0;
+                    if (ss::lep3_fo() and !ss::lep3_tight() and !lep3_lowpt_veto and lep1good and lep2good && lep3pt>min_pt_fake) {  // lep3 fake
+                        float fr = fakeRate(year, lep3id, lep3ccpt, lep3eta, ht, analysis, new2016FRBins, !minPtFake18);
+                        class6Fake = true;
+                        nfakes++;
+                        weight *= fr / (1-fr);
+                    }
+                    if (ss::lep2_fo() and !ss::lep2_tight() and !lep2_lowpt_veto and lep1good and lep3good && lep2pt>min_pt_fake) {  // lep2 fake
+                        float fr = fakeRate(year, lep2id, lep2ccpt, lep2eta, ht, analysis, new2016FRBins, !minPtFake18);
+                        class6Fake = true;
+                        nfakes++;
+                        weight *= fr / (1-fr);
+                    }
+                    if (ss::lep1_fo() and !ss::lep1_tight() and !lep1_lowpt_veto and lep2good and lep3good && lep1pt>min_pt_fake) {  // lep1 fake
+                        float fr = fakeRate(year, lep1id, lep1ccpt, lep1eta, ht, analysis, new2016FRBins, !minPtFake18);
+                        class6Fake = true;
+                        nfakes++;
+                        weight *= fr / (1-fr);
+                    }
+                    if (!class6Fake) {
+                        continue; // No fakes!
+                    }
+                    if (nfakes == 2) weight *= -1;
+                } else if (hyp_class == 1 or hyp_class == 2) {
+                    bool foundGoodLoose = false;
+                    if (ss::lep1_passes_id()==0 && lep1pt>min_pt_fake) {
+                        float fr = fakeRate(year, lep1id, lep1ccpt, lep1eta, ht, analysis, new2016FRBins, !minPtFake18);
+                        weight *= fr/(1.-fr);
+                        foundGoodLoose = true;
+                    }
+                    if (ss::lep2_passes_id()==0 && lep2pt>min_pt_fake) {
+                        float fr = fakeRate(year, lep2id, lep2ccpt, lep2eta, ht, analysis, new2016FRBins, !minPtFake18);
+                        weight *= fr/(1.-fr);
+                        foundGoodLoose = true;
+                    }
+                    if (!foundGoodLoose)
+                        continue;
+                    // subtract double FO (why is this?)
+                    if (hyp_class == 1 && lep1pt>min_pt_fake && lep2pt>min_pt_fake) weight *= -1.;
+                    // subtract prompt MC
+                    if (isData and !ss::is_real_data()) weight *= -1.;
+                    hyp_class = 3; // we've faked a SS Tight-Tight with a SS LL or SS TL
+                    // Basically just update this so it gets put in the SR
+                } else {
+                    continue; // Not a fakeing hyp_class
+                }
+            }
+*/
+
+            //Flips
+            if (doFlips) {
+                // Why the arbitrary class change?
+                if (hyp_class == 4) hyp_class = 3; // we've flipped an OS to a SS
+                // else if (hyp_class == 6) class6Fake = true;
+                else continue;
+                float flipFact = 0.;
+                if (abs(lep1hypid) == 11) {
+                    float flr = flipRate(nt.year(), hyplep1.pt(), hyplep1.eta(), FTANA);
+                    flipFact += (flr/(1-flr));
+                }
+                if (abs(lep2hypid) == 11) {
+                    float flr = flipRate(nt.year(), hyplep2.pt(), hyplep2.eta(), FTANA);
+                    flipFact += (flr/(1-flr));
+                }
+                weight *= flipFact;
+                if (weight == 0.0) continue; // just quit if there are no flips.
+            }
 
 
             // Made extra Z
@@ -308,7 +449,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 }
             }
             if (extraZ) {continue;}
-            cut_info(surviveCuts[5], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[5], weightedCut[5], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // Min 2 jets
@@ -318,12 +459,12 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             Jets jets;
             tie(njets, nbtags, ht) = getJetInfo(leps, jets);
             if (njets < 2) {continue;}
-            cut_info(surviveCuts[6], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[6], weightedCut[6], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // No btags
             if (nbtags > 0) {continue;}
-            cut_info(surviveCuts[7], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[7], weightedCut[7], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // Make DiJet pairs
@@ -344,7 +485,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 if (fabs((dijets[i].first.p4() + dijets[i].second.p4()).mass())) {jets120.push_back(dijets[i]);}
             }
             if (jets120.size() < 1) {continue;}
-            cut_info(surviveCuts[8], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[8], weightedCut[8], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
 
@@ -391,17 +532,17 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 if (fabs((jets120[i].first.p4() + jets120[i].second.p4()).mass())) {jets500.push_back(jets120[i]);}
             }
             if (jets500.size() < 1) {continue;}
-            cut_info(surviveCuts[9], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[9], weightedCut[9], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // Min 3 jets
             if (njets < 3) {continue;}
-            cut_info(surviveCuts[10], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[10], weightedCut[10], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // Min 4 jets
             if (njets < 4) {continue;}
-            cut_info(surviveCuts[11], counts, h_counts, "ssbr", ptleps[0].id(), ptleps[1].id(), weight);
+            cut_info(surviveCuts[11], weightedCut[11], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
             fill_region("bkgdcuts", weight);
 
@@ -418,19 +559,19 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 
     // Print statements for debugging
     cout << endl;
-    cout << "Debugs" << endl;
-    printf ("\nTotal Events: %i \n", surviveCuts[0]);
-    printf ("Pt Minimum: %i \n", surviveCuts[1]);
-    printf ("Loose Selection: %i \n", surviveCuts[2]);
-    printf ("Tight Selection: %i \n", surviveCuts[3]);
-    printf ("SS Pairs: %i \n", surviveCuts[4]);
-    printf ("Close to Z: %i \n", surviveCuts[5]);
-    printf ("Min 2 Jets: %i \n", surviveCuts[6]);
-    printf ("No bTags: %i \n", surviveCuts[7]);
-    printf ("Invar Mass > 120: %i \n", surviveCuts[8]);
-    printf ("Invar Mass > 500: %i \n", surviveCuts[9]);
-    printf ("Min 3 Jets: %i \n", surviveCuts[10]);
-    printf ("Min 4 Jets: %i \n", surviveCuts[11]);
+    cout << "Debugs: Cut: Events, Weighted" << endl;
+    printf ("\nTotal Events: %i, %f \n", surviveCuts[0], weightedCut[0]);
+    printf ("Pt Minimum: %i, %f \n", surviveCuts[1], weightedCut[1]);
+    printf ("Loose Selection: %i, %f \n", surviveCuts[2], weightedCut[2]);
+    printf ("Tight Selection: %i, %f \n", surviveCuts[3], weightedCut[3]);
+    printf ("SS Pairs: %i, %f \n", surviveCuts[4], weightedCut[4]);
+    printf ("Close to Z: %i, %f \n", surviveCuts[5], weightedCut[5]);
+    printf ("Min 2 Jets: %i, %f \n", surviveCuts[6], weightedCut[6]);
+    printf ("No bTags: %i, %f \n", surviveCuts[7], weightedCut[7]);
+    printf ("Invar Mass > 120: %i, %f \n", surviveCuts[8], weightedCut[8]);
+    printf ("Invar Mass > 500: %i, %f \n", surviveCuts[9], weightedCut[9]);
+    printf ("Min 3 Jets: %i, %f \n", surviveCuts[10], weightedCut[10]);
+    printf ("Min 4 Jets: %i, %f \n", surviveCuts[11], weightedCut[11]);
 
 
     // Wrap up
