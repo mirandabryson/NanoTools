@@ -26,7 +26,7 @@
 #include "/home/users/ian/NanoTools/NanoCORE/ElectronSelections.cc"
 #include "/home/users/ian/NanoTools/NanoCORE/MuonSelections.cc"
 #include "/home/users/ian/NanoTools/NanoCORE/IsolationTools.cc"
-//#include "/home/users/ian/NanoTools/studies/sspairsanalysis/sspairs.C"
+//#include "/home/users/ian/NanoTools/studies/sspairsanalysis/sspairs.h"
 #include "/home/users/ian/NanoTools/NanoCORE/tqdm.h"
 
 #include "/home/users/ian/VBSAna/analysis/misc/common_utils.h"
@@ -164,7 +164,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 //  }
 
     // Set configuration parameters
-    gconf.year = 2016;
+//    gconf.year = 2016;
 
 /*    int year;
     float lumiAG = 0.;
@@ -210,6 +210,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     // Tree branches
     int tree_counts = -1;
 
+    // No title if using doall.C
     TFile *  f1 = new TFile(Form("%s/histos_%s.root", outputdir.Data(), ch->GetTitle()), "RECREATE");
     f1->cd();
 
@@ -226,19 +227,53 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
         TFile *file = TFile::Open( currentFile->GetTitle() );
         TTree *tree = (TTree*)file->Get("Events");
         TString filename(currentFile->GetTitle());
+        string samplename(currentFile->GetTitle());
+        cout << filename << endl;
         // TTree configuration
         tree->SetCacheSize(128*1024*1024);
         tree->SetCacheLearnEntries(100);
         auto psRead = new TTreePerfStats("readPerf", tree);
 //        nt.Init(tree, 2016);
-        nt.SetYear(2016);
+//        nt.SetYear(2017);
         nt.Init(tree);
         // Get "total" genWeight
+        // Some nano files call it genWeight others Generator_weight
         int normalWeight = 0;
         for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
-            int weightMod = (nt.genWeight() > 0) ? 1 : -1;
+            int weightMod = (nt.Generator_weight() > 0) ? 1 : -1;
+//            int weightMod = (nt.genWeight() > 0) ? 1 : -1;
             normalWeight += weightMod;
         }
+
+        // Gets xsec from file name
+        vector<string> procs = {"ttHTobb", "TTWJetsToLNu", "TTZToLLNuNu", "TTJets_DiLept", "TTJets_SingleLeptFromT", "TTJets_SingleLeptFromTbar", "WpWpJJ_EWK", "WZTo3LNu", "VBSWmpWmpHToLNuLNu_TuneCP5"};
+        vector<float>  xsecs = {   0.1279,         0.2043,        0.2529,          91.044,                   182.96,                      182.96,       0.0539,     4.4297,                   0.00001708};
+        int nprocs = procs.size();
+
+        float xsec;
+        size_t found;
+        bool procided = false;
+        for (int i = 0; i < nprocs; i++) {
+            found = samplename.find(procs[i]);
+            if (found != string::npos) {cout << procs[i] << endl; xsec = xsecs[i]; cout << xsec << endl; procided = true; break;}
+        }
+        if (!procided) {cout << "Unknow Process, stopping" << endl; continue;}
+
+        float lumi16 = 35.922;
+        float lumi17 = 41.53;
+        float lumi18 = 59.71;
+        if (!isData()) {
+            int wsgn = (nt.Generator_weight() > 0) ? 1 : -1;
+//                int wsgn = (nt.genWeight() > 0) ? 1 : -1;
+            weight = wsgn * xsec / normalWeight * 1000;
+            if (nt.year() == 2016) {weight *= lumi16;}
+            else if (nt.year() == 2017) {weight *= lumi17;}
+            else if (nt.year() == 2018) {weight *= lumi18;}
+            else {cout << "No year, skipping event" << endl; continue;}
+        }
+
+        cout << nt.year() << endl;
+        
         // Event loop
         for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 //            sspairs_tree->resetBranches();
@@ -248,21 +283,6 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             // Update progress
             nEventsTotal++;
             bar.progress(nEventsTotal, nEventsChain);
-
-            // Need funtion to deal with cross section
-            float xsec = 0.215;
-            float lumi16 = 35.922;
-            float lumi17 = 41.53;
-            float lumi18 = 59.71;
-            if (!isData()) {
-                int wsgn = (nt.genWeight() > 0) ? 1 : -1;
-                weight = wsgn * xsec / normalWeight * 1000;
-                if (nt.year() == 2016) {weight *= lumi16;}
-                else if (nt.year() == 2017) {weight *= lumi17;}
-                else if (nt.year() == 2018) {weight *= lumi18;}
-                else {cout << "No year, skipping event" << endl; continue;}
-            }
-
 
             // Fill event-level info
 //            sspairs_tree->event = nt.event();
@@ -297,10 +317,27 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             cut_info(surviveCuts[0], weightedCut[0], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
             
 
-            // Make sure leptons have the required min pt
+            // No hyp
+            if (hyp_class == -1) {continue;}
+
+            // Leptons in hypothesis make pt cut 
             float eptcut = 25;
             float uptcutleading = 25;
             float uptcuttrailing = 20;
+            if (hyplep1.is_el()) {
+                if (hyplep1.pt() < eptcut) {continue;}
+            } else if (hyplep1.is_mu()) {
+                if (hyplep1.pt() < uptcutleading) {continue;}
+            }
+
+            if (hyplep2.is_el()) {
+                if (hyplep2.pt() < eptcut) {continue;}
+            } else if (hyplep2.is_mu()) {
+                if (hyplep2.pt() < uptcuttrailing) {continue;}
+            }
+            
+
+
             Leptons ptleps;
             for (int i = 0; i < leps.size(); i++) {
                 if ((leps[i].is_el()) && (leps[i].pt() > eptcut)) {ptleps.push_back(leps[i]);}
@@ -310,29 +347,23 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                     if ((leps[i].is_mu()) && (leps[i].pt() > uptcuttrailing)) {ptleps.push_back(leps[i]);}
                 }
             }
-            if (ptleps.size() < 2) {continue;} 
+//            if (ptleps.size() < 2) {continue;} 
             cut_info(surviveCuts[1], weightedCut[1], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
-            // Tight leptons
-            Leptons looseleps;
-            for (int i = 0; i < ptleps.size(); i++) {
-                if (ptleps[i].idlevel() >= SS::IDfakable) {looseleps.push_back(ptleps[i]);}
-            }
-            if (looseleps.size() < 2) {continue;}
+            // At least loose-loose, not nessesarily ss
+            vector<int> looseKeys = {3, 6, 2, 1, 4};
+            if (find(looseKeys.begin(), looseKeys.end(), hyp_class) == looseKeys.end()) {continue;}
             cut_info(surviveCuts[2], weightedCut[2], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
-            // Tight leptons
-            Leptons tightleps;
-            for (int i = 0; i < looseleps.size(); i++) {
-                if (looseleps[i].idlevel() == SS::IDtight) {tightleps.push_back(ptleps[i]);}
-            }
-            int nleps = tightleps.size();
-            if (nleps < 2) {continue;}
+
+            // At least tight-tight, not nessesarily ss
+            vector<int> tightKeys = {3, 6, 4};
+            if (find(tightKeys.begin(), tightKeys.end(), hyp_class) == tightKeys.end()) {continue;}
             cut_info(surviveCuts[3], weightedCut[3], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
             // Make pairs of leptons
-            vector<Hyp> pairs;
+/*            vector<Hyp> pairs;
             Hyp tmppair;
             for (int i = 0; i < nleps; i++){
                 for (int j = 0; j < nleps; j++){
@@ -341,17 +372,11 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                     pairs.push_back(tmppair);
                 }
             }
-            int npairs = pairs.size();
+            int npairs = pairs.size();*/
 
-
-            // Sort pairs by opposite and same sign
-            vector<Hyp> sspairs;
-            vector<Hyp> ospairs;
-            for (int i = 0; i < npairs; i++) {
-                if ((pairs[i].first.charge() == pairs[i].second.charge())) {sspairs.push_back(pairs[i]);}
-                else {ospairs.push_back(pairs[i]);}
-            }
-            if (sspairs.size() < 1) {continue;}
+            // SS
+            vector<int> ssKeys = {3, 6};
+            if (find(ssKeys.begin(), ssKeys.end(), hyp_class) == ssKeys.end()) {continue;}
             cut_info(surviveCuts[4], weightedCut[4], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
             // Find 3rd lepton, (highest pt not part of the hyp pair)
@@ -436,19 +461,8 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             }
 
 
-            // Made extra Z
-            // Used code from getBestHyp
-            float Zmass = 91.2;
-            float Zcut = 15.0;
-            bool extraZ = false;
-            for (int i = 0; i < leps.size(); i++) {
-                for (int j = i + 1; j < leps.size(); j++) {
-                    auto zResult = makesResonance(leps, leps[i], leps[j], Zmass, Zcut);
-                    extraZ = zResult.first >= 0;
-                    if (extraZ) {break;}
-                }
-            }
-            if (extraZ) {continue;}
+            // Made extra Z 
+            if (hyp_class == 6) {continue;}
             cut_info(surviveCuts[5], weightedCut[5], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
 
 
@@ -491,8 +505,8 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 
 
             // Create fill function
-            int lep1id = ptleps[0].id();
-            int lep2id = ptleps[1].id();
+            int lep1id = hyplep1.id();
+            int lep2id = hyplep2.id();
             auto fill_region = [&](const string& region, float weight) {
                 if (std::find(regions.begin(), regions.end(), region) == regions.end()) return;
                 // Fill all observables for a region
@@ -504,7 +518,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 };
 
             // My fills
-                do_fill(h_nleps, nleps);
+//                do_fill(h_nleps, nleps);
                 do_fill(h_nbtags, nbtags);
                 do_fill(h_njets, njets);
 
