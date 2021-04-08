@@ -129,6 +129,15 @@ void cut_info (int &cut, float &wcut, int &count, HistCol &hist, string region, 
     return;
 }
 
+void proc_info (vector<string> &procs, string proc, vector<float> &xsecs, float xsec, vector<int> &nws16, int nw16, vector<int> &nws17, int nw17, vector<int> &nws18, int nw18) {
+    procs.push_back(proc);
+    xsecs.push_back(xsec);
+    nws16.push_back(nw16);
+    nws17.push_back(nw17);
+    nws18.push_back(nw18);
+    return;
+}
+
 
 // Debug tools
 // #define DEBUG
@@ -140,11 +149,14 @@ struct debugger { template<typename T> debugger& operator , (const T& v) { cerr<
 #endif
 
 
-void write_debug(std::ofstream& inf, int r, int l, int e, int id, float eta, float phi, float pt /*, float ptratio*/) {
-    inf << Form("%d, %d, %d, %d, %f, %f, %f", r, l, e, id, eta, phi, pt/*, ptratio*/) << endl;
+void write_debug_event_info(std::ofstream& inf, int r, int l, int e) {
+    inf << Form("%d, %d, %d", r, l, e) << endl;
     return;
 }
-
+void write_debug_pair_mass(std::ofstream &inf, int id1, int id2, float mass) {
+    inf << Form("%d, %d, %f", id1, id2, mass) << endl;
+    return;
+}
 
 // Looper begins
 int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
@@ -163,20 +175,6 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 //  if (debug and dfile.is_open()){
 //  }
 
-    // Set configuration parameters
-//    gconf.year = 2016;
-
-/*    int year;
-    float lumiAG = 0.;
-    bool is2016(false), is2017(false), is2018(false);
-    if (options.Contains("Data2016")) {
-        lumiAG = getLumi(2016);
-        year = 2016;
-        is2016 = true;
-    } else 
-*/
-
-
 
     // Custom TTree
 //    SSpairsTree* sspairs_tree = new SSpairsTree(2016);
@@ -188,7 +186,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     TFile *currentFile = 0;
     TObjArray *listOfFiles = ch->GetListOfFiles();
     TIter fileIter(listOfFiles);
-    tqdm bar;
+    //tqdm bar;
 
     // Regions of interest    
     vector<string> regions;
@@ -217,7 +215,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     TTree* out_tree = new TTree("t","t");
     out_tree->Branch("counts", &tree_counts);
  
-    int surviveCuts [] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int   surviveCuts [] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     float weightedCut [] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
@@ -226,9 +224,13 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
         // Open file
         TFile *file = TFile::Open( currentFile->GetTitle() );
         TTree *tree = (TTree*)file->Get("Events");
+
         TString filename(currentFile->GetTitle());
+        //cout << filename << endl;
+
         string samplename(currentFile->GetTitle());
-        cout << filename << endl;
+
+
         // TTree configuration
         tree->SetCacheSize(128*1024*1024);
         tree->SetCacheLearnEntries(100);
@@ -238,41 +240,69 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
         nt.Init(tree);
         // Get "total" genWeight
         // Some nano files call it genWeight others Generator_weight
-        int normalWeight = 0;
-        for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
+/*        for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
             int weightMod = (nt.Generator_weight() > 0) ? 1 : -1;
 //            int weightMod = (nt.genWeight() > 0) ? 1 : -1;
             normalWeight += weightMod;
-        }
+        }*/
 
-        // Gets xsec from file name
-        vector<string> procs = {"ttHTobb", "TTWJetsToLNu", "TTZToLLNuNu", "TTJets_DiLept", "TTJets_SingleLeptFromT", "TTJets_SingleLeptFromTbar", "WpWpJJ_EWK", "WZTo3LNu", "VBSWmpWmpHToLNuLNu_TuneCP5"};
-        vector<float>  xsecs = {   0.1279,         0.2043,        0.2529,          91.044,                   182.96,                      182.96,       0.0539,     4.4297,                   0.00001708};
+        // Makes sure sample has xsec computed, aborts if not
+//        vector<string> procs = {"VBSWmpWmpHToLNuLNu_TuneCP5"};
+//        vector<float>  xsecs = {                  0.00001708};
+        vector<string>  procs;
+        vector<float>   xsecs;
+        vector<int> nWeights16;
+        vector<int> nWeights17;
+        vector<int> nWeights18;
+
+        // Normal Weights computed by NormalWeight.py 
+        proc_info(procs, "ttHTobb"                  , xsecs, 0.1279, nWeights16, 9713552 , nWeights17, 9328425 , nWeights18, 9630791 );
+        proc_info(procs, "TTWJetsToLNu"             , xsecs, 0.2043, nWeights16, 3858238 , nWeights17, 3802302 , nWeights18, 3799018 );
+        proc_info(procs, "TTZToLLNuNu"              , xsecs, 0.2529, nWeights16, 9958784 , nWeights17, 5838974 , nWeights18, 9777023 );
+        proc_info(procs, "TTJets_DiLept"            , xsecs, 91.044, nWeights16, 6068369 , nWeights17, 28364589, nWeights18, 28687893);
+        proc_info(procs, "TTJets_SingleLeptFromT"   , xsecs, 182.96, nWeights16, 11957043, nWeights17, 60292432, nWeights18, 58016546);
+        proc_info(procs, "TTJets_SingleLeptFromTbar", xsecs, 182.96, nWeights16, 11598156, nWeights17, 5684259 , nWeights18, 59901061);
+        proc_info(procs, "WpWpJJ_EWK"               , xsecs, 0.0539, nWeights16, 149681  , nWeights17, 148697  , nWeights18, 149684  );
+        proc_info(procs, "WZTo3LNu"                 , xsecs, 4.4297, nWeights16, 1993200 , nWeights17, 8937546 , nWeights18, 8588148 );
+
         int nprocs = procs.size();
 
         float xsec;
+        float nWeight16;
+        float nWeight17;
+        float nWeight18;
         size_t found;
         bool procided = false;
         for (int i = 0; i < nprocs; i++) {
             found = samplename.find(procs[i]);
-            if (found != string::npos) {cout << procs[i] << endl; xsec = xsecs[i]; cout << xsec << endl; procided = true; break;}
+            if (found != string::npos) {
+                //cout << procs[i] << endl; 
+                xsec = xsecs[i];
+                //cout << xsec << endl;
+                nWeight16 = nWeights16[i];
+                nWeight17 = nWeights17[i];
+                nWeight18 = nWeights18[i];
+                procided = true;
+                break;}
         }
         if (!procided) {cout << "Unknow Process, stopping" << endl; continue;}
 
+
+        // Computes first order weight from lumi and xsec
         float lumi16 = 35.922;
         float lumi17 = 41.53;
         float lumi18 = 59.71;
         if (!isData()) {
             int wsgn = (nt.Generator_weight() > 0) ? 1 : -1;
 //                int wsgn = (nt.genWeight() > 0) ? 1 : -1;
-            weight = wsgn * xsec / normalWeight * 1000;
-            if (nt.year() == 2016) {weight *= lumi16;}
-            else if (nt.year() == 2017) {weight *= lumi17;}
-            else if (nt.year() == 2018) {weight *= lumi18;}
+//            weight = wsgn * xsec / normalWeight * 1000;
+            weight = wsgn * xsec * 1000;
+            if (nt.year() == 2016) {weight *= (lumi16 / nWeight16);}
+            else if (nt.year() == 2017) {weight *= (lumi17 / nWeight17);}
+            else if (nt.year() == 2018) {weight *= (lumi18 / nWeight18);}
             else {cout << "No year, skipping event" << endl; continue;}
         }
-
-        cout << nt.year() << endl;
+        cout << weight << endl;
         
         // Event loop
         for(unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
@@ -282,7 +312,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             tree->LoadTree(event);
             // Update progress
             nEventsTotal++;
-            bar.progress(nEventsTotal, nEventsChain);
+            //bar.progress(nEventsTotal, nEventsChain);
 
             // Fill event-level info
 //            sspairs_tree->event = nt.event();
@@ -290,6 +320,7 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             // Basic info
             int run = nt.run();
             int lumi = nt.luminosityBlock();
+            int evnt = nt.event();
 
             int counts = 1;
 //            cut_info(surviveCuts[0], weightedCut[0], scounts, h_counts, "ssbr", 11, 11, weight);
@@ -309,12 +340,13 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
              */
             auto bestHyp = getBestHyp(leps, false);
             int hyp_class = bestHyp.first;
-            Lepton hyplep1 = bestHyp.second.first;
-            Lepton hyplep2 = bestHyp.second.second;
-            int lep1hypid = bestHyp.second.first.id();
-            int lep2hypid = bestHyp.second.second.id();
+            Lepton lep1 = bestHyp.second.first;
+            Lepton lep2 = bestHyp.second.second;
+            int lep1id = bestHyp.second.first.id();
+            int lep2id = bestHyp.second.second.id();
 
-            cut_info(surviveCuts[0], weightedCut[0], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+
+            cut_info(surviveCuts[0], weightedCut[0], counts, h_counts, "ssbr", lep1id, lep2id, weight);
             
 
             // No hyp
@@ -324,21 +356,20 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             float eptcut = 25;
             float uptcutleading = 25;
             float uptcuttrailing = 20;
-            if (hyplep1.is_el()) {
-                if (hyplep1.pt() < eptcut) {continue;}
-            } else if (hyplep1.is_mu()) {
-                if (hyplep1.pt() < uptcutleading) {continue;}
+            if (lep1.is_el()) {
+                if (lep1.pt() < eptcut) {continue;}
+            } else if (lep1.is_mu()) {
+                if (lep1.pt() < uptcutleading) {continue;}
             }
 
-            if (hyplep2.is_el()) {
-                if (hyplep2.pt() < eptcut) {continue;}
-            } else if (hyplep2.is_mu()) {
-                if (hyplep2.pt() < uptcuttrailing) {continue;}
+            if (lep2.is_el()) {
+                if (lep2.pt() < eptcut) {continue;}
+            } else if (lep2.is_mu()) {
+                if (lep2.pt() < uptcuttrailing) {continue;}
             }
             
 
-
-            Leptons ptleps;
+/*            Leptons ptleps;
             for (int i = 0; i < leps.size(); i++) {
                 if ((leps[i].is_el()) && (leps[i].pt() > eptcut)) {ptleps.push_back(leps[i]);}
                 else if (ptleps.size() == 0) {
@@ -346,20 +377,20 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
                 } else {
                     if ((leps[i].is_mu()) && (leps[i].pt() > uptcuttrailing)) {ptleps.push_back(leps[i]);}
                 }
-            }
+            }*/
 //            if (ptleps.size() < 2) {continue;} 
-            cut_info(surviveCuts[1], weightedCut[1], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[1], weightedCut[1], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
             // At least loose-loose, not nessesarily ss
             vector<int> looseKeys = {3, 6, 2, 1, 4};
             if (find(looseKeys.begin(), looseKeys.end(), hyp_class) == looseKeys.end()) {continue;}
-            cut_info(surviveCuts[2], weightedCut[2], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[2], weightedCut[2], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
             // At least tight-tight, not nessesarily ss
             vector<int> tightKeys = {3, 6, 4};
             if (find(tightKeys.begin(), tightKeys.end(), hyp_class) == tightKeys.end()) {continue;}
-            cut_info(surviveCuts[3], weightedCut[3], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[3], weightedCut[3], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
             // Make pairs of leptons
@@ -377,13 +408,22 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             // SS
             vector<int> ssKeys = {3, 6};
             if (find(ssKeys.begin(), ssKeys.end(), hyp_class) == ssKeys.end()) {continue;}
-            cut_info(surviveCuts[4], weightedCut[4], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[4], weightedCut[4], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
             // Find 3rd lepton, (highest pt not part of the hyp pair)
-//            Lepton lep3;
-//            for (int i = 0; i < nleps; i++) {
-//                if
-//            }
+/*            Lepton lep3;
+            for (int i = 0; i < leps.size(); i++) {
+                if ((leps[i].pt() == lep1.pt()) || (leps[i].pt() == lep2.pt())) {continue;}
+                if (lep3.pt() == 0) {lep3 = leps[i];}
+                else if (leps[i].pt() > lep3.pt()) {lep3 = leps[i];}
+            }
+
+            int lep3id = lep3.id();
+            
+            float lep1pt = lep1.pt();
+            float lep2pt = lep2.pt();
+            float lep3pt = lep3.pt();*/
+
 /*
             // Fakes 
             bool class6Fake = false;
@@ -442,29 +482,28 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
 */
 
             //Flips
-            if (doFlips) {
+/*            if (doFlips) {
                 // Why the arbitrary class change?
                 if (hyp_class == 4) hyp_class = 3; // we've flipped an OS to a SS
                 // else if (hyp_class == 6) class6Fake = true;
                 else continue;
                 float flipFact = 0.;
-                if (abs(lep1hypid) == 11) {
-                    float flr = flipRate(nt.year(), hyplep1.pt(), hyplep1.eta(), FTANA);
+                if (abs(lep1id) == 11) {
+                    float flr = flipRate(nt.year(), lep1.pt(), lep1.eta(), FTANA);
                     flipFact += (flr/(1-flr));
                 }
-                if (abs(lep2hypid) == 11) {
-                    float flr = flipRate(nt.year(), hyplep2.pt(), hyplep2.eta(), FTANA);
+                if (abs(lep2id) == 11) {
+                    float flr = flipRate(nt.year(), lep2.pt(), lep2.eta(), FTANA);
                     flipFact += (flr/(1-flr));
                 }
                 weight *= flipFact;
                 if (weight == 0.0) continue; // just quit if there are no flips.
-            }
+            }*/
 
 
             // Made extra Z 
             if (hyp_class == 6) {continue;}
-            cut_info(surviveCuts[5], weightedCut[5], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
-
+            cut_info(surviveCuts[5], weightedCut[5], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
             // Min 2 jets
             int njets;
@@ -473,12 +512,12 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             Jets jets;
             tie(njets, nbtags, ht) = getJetInfo(leps, jets);
             if (njets < 2) {continue;}
-            cut_info(surviveCuts[6], weightedCut[6], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[6], weightedCut[6], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
             // No btags
             if (nbtags > 0) {continue;}
-            cut_info(surviveCuts[7], weightedCut[7], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[7], weightedCut[7], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
             // Make DiJet pairs
@@ -496,17 +535,15 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             // Invarient DiJet Mass > 120
             vector<DiJet> jets120;
             for (int i = 0; i < dijets.size(); i++) {
-                if (fabs((dijets[i].first.p4() + dijets[i].second.p4()).mass())) {jets120.push_back(dijets[i]);}
+                if (fabs((dijets[i].first.p4() + dijets[i].second.p4()).mass()) > 120) {jets120.push_back(dijets[i]);}
             }
             if (jets120.size() < 1) {continue;}
-            cut_info(surviveCuts[8], weightedCut[8], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[8], weightedCut[8], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
 
 
             // Create fill function
-            int lep1id = hyplep1.id();
-            int lep2id = hyplep2.id();
             auto fill_region = [&](const string& region, float weight) {
                 if (std::find(regions.begin(), regions.end(), region) == regions.end()) return;
                 // Fill all observables for a region
@@ -543,20 +580,20 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
             // Invarient DiJet Mass > 500
             vector<DiJet> jets500;
             for (int i = 0; i < jets120.size(); i++) {
-                if (fabs((jets120[i].first.p4() + jets120[i].second.p4()).mass())) {jets500.push_back(jets120[i]);}
+                if (fabs((jets120[i].first.p4() + jets120[i].second.p4()).mass()) > 500) {jets500.push_back(jets120[i]);}
             }
             if (jets500.size() < 1) {continue;}
-            cut_info(surviveCuts[9], weightedCut[9], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[9], weightedCut[9], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
             // Min 3 jets
             if (njets < 3) {continue;}
-            cut_info(surviveCuts[10], weightedCut[10], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[10], weightedCut[10], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
 
             // Min 4 jets
             if (njets < 4) {continue;}
-            cut_info(surviveCuts[11], weightedCut[11], counts, h_counts, "ssbr", lep1hypid, lep2hypid, weight);
+            cut_info(surviveCuts[11], weightedCut[11], counts, h_counts, "ssbr", lep1id, lep2id, weight);
 
             fill_region("bkgdcuts", weight);
 
@@ -572,9 +609,11 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     } // END file loop
 
     // Print statements for debugging
+
     cout << endl;
+    cout << ch->GetTitle() << endl;
     cout << "Debugs: Cut: Events, Weighted" << endl;
-    printf ("\nTotal Events: %i, %f \n", surviveCuts[0], weightedCut[0]);
+    printf ("Min 2 Lepton Events: %i, %f \n", surviveCuts[0], weightedCut[0]);
     printf ("Pt Minimum: %i, %f \n", surviveCuts[1], weightedCut[1]);
     printf ("Loose Selection: %i, %f \n", surviveCuts[2], weightedCut[2]);
     printf ("Tight Selection: %i, %f \n", surviveCuts[3], weightedCut[3]);
@@ -587,14 +626,14 @@ int ScanChain(TChain *ch, TString option="", TString outputdir="plots") {
     printf ("Min 3 Jets: %i, %f \n", surviveCuts[10], weightedCut[10]);
     printf ("Min 4 Jets: %i, %f \n", surviveCuts[11], weightedCut[11]);
 
-
     // Wrap up
-    bar.finish();
+    //bar.finish();
     out_tfile->cd();
 //    lt_ttree->Write();
     f1->cd();
     for (HistCol* coll : registry) coll->Write();
     for (HistCol2D* coll : registry2D) coll->Write();
+    out_tree->Write();
     out_tfile->Close();
     f1->Close();
     if (dfile.is_open()) dfile.close();
