@@ -58,7 +58,7 @@ class GlobalConfig {
     void GetConfigs(int year = 0);          // pass in year or nothing
     void GetSampleType(std::string dsname); // reduce the sample name to shorter sample types
     void GetConfigsFromDatasetName(
-        std::string dsname); // pass in the datasetname or filename (that contains the dataset info)
+    std::string dsname); // pass in the datasetname or filename (that contains the dataset info)
 };
 
 #ifndef __CINT__

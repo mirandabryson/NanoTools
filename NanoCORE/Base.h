@@ -1,6 +1,8 @@
 #ifndef BASE_H
 #define BASE_H
 
+#include<string>
+
 namespace SS {
     enum IDLevel {
         IDdefault = -1,
