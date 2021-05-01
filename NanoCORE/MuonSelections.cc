@@ -4,15 +4,20 @@
 using namespace tas;
 
 bool SS::muonID(unsigned int idx, SS::IDLevel id_level, int year) {
-    // Common checks
-    if (Muon_pt().at(idx) < 10.) { return false; }
+    // Common (across years and ID levels) checks
+    if (Muon_pt().at(idx) < 5.) { return false; }
     if (fabs(Muon_eta().at(idx)) > 2.4) { return false; }
     if (fabs(Muon_dxy().at(idx)) > 0.05) { return false; }
     if (fabs(Muon_dz().at(idx)) > 0.1) { return false; }
-    if (fabs(Muon_sip3d().at(idx)) >= 4) { return false; }
-    if (!Muon_looseId().at(idx)) { return false; }
-    if (Muon_ptErr().at(idx) / Muon_pt().at(idx) >= 0.2) { return false; }
-    if (!Muon_mediumId().at(idx)) { return false; }
+    if (!Muon_looseId().at(idx)) { return false; } // loose POG ID
+    if (Muon_miniPFRelIso_all().at(idx) > 0.4) { return false; }
+    if (id_level > SS::IDveto) {
+        // Common (across years) fakable(loose) and tight checks
+        if (Muon_pt().at(idx) < 10.) { return false; }
+        if (fabs(Muon_sip3d().at(idx)) >= 4) { return false; }
+        if (!Muon_mediumId().at(idx)) { return false; } // medium POG ID
+        if (Muon_ptErr().at(idx) / Muon_pt().at(idx) >= 0.2) { return false; }
+    }
     switch (year) {
     case (2016):
         return muon2016ID(idx, id_level);
@@ -37,7 +42,6 @@ bool SS::muon2016ID(unsigned int idx, SS::IDLevel id_level) {
         return true;
         break;
     case (SS::IDfakable):
-        if (Muon_miniPFRelIso_all().at(idx) > 0.4) { return false; }
         return true;
         break;
     case (SS::IDtight):
@@ -59,7 +63,6 @@ bool SS::muon2017ID(unsigned int idx, SS::IDLevel id_level) {
         return true;
         break;
     case (SS::IDfakable):
-        if (Muon_miniPFRelIso_all().at(idx) > 0.4) { return false; }
         return true;
         break;
     case (SS::IDtight):
@@ -82,7 +85,6 @@ bool SS::muon2018ID(unsigned int idx, SS::IDLevel id_level) {
         break;
     case (SS::IDfakable):
         // Same as 2017 ID
-        if (Muon_miniPFRelIso_all().at(idx) > 0.4) { return false; }
         return true;
         break;
     case (SS::IDtight):

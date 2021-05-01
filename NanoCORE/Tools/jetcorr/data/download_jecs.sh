@@ -4,7 +4,7 @@
 
 baseurl="https://raw.githubusercontent.com/cms-jet/JECDatabase/master/textFiles/"
 
-era="Autumn18_V19_MC"
+era="Summer16_07Aug2017_V11_MC"
 
 jettypes="
 AK4PFchs

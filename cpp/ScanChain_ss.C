@@ -67,8 +67,6 @@ int ScanChain(TChain *ch) {
         tree->SetCacheSize(128*1024*1024);
         tree->SetCacheLearnEntries(100);
 
-        auto psRead = new TTreePerfStats("readPerf", tree);
-
         nt.Init(tree);
 
         for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {

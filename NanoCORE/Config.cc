@@ -166,7 +166,7 @@ void GlobalConfig::GetConfigs(int in_year) {
         jecEraB = "Autumn18_RunB_V8_DATA";
         jecEraC = "Autumn18_RunC_V8_DATA";
         jecEraD = "Autumn18_RunD_V8_DATA";
-        jecEraMC = "Autumn18_V8_MC";
+        jecEraMC = "Autumn18_V19_MC";
 
         // B-tag working points
         // https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation102X
