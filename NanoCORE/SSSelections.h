@@ -58,33 +58,6 @@ typedef std::pair<Lepton, Lepton> Hyp;
 typedef std::vector<std::pair<Lepton, Lepton> > Hyps;
 typedef std::vector<Lepton> Leptons;
 
-struct Jet {
-    Jet(unsigned int idx = 0) : idx_(idx) {
-        id_ = nt.Jet_jetId()[idx_];
-        pt_ = nt.Jet_pt()[idx_];
-        eta_ = nt.Jet_eta()[idx_];
-        phi_ = nt.Jet_phi()[idx_];
-        p4_ = nt.Jet_p4()[idx_];
-    }
-    int id() { return id_; }
-    bool is_btag() { return false; } // { return ((pt_ > 25.0) && (Jet_btagDeepB()[idx_] > 0.4941)); }
-    unsigned int idx() { return idx_; }
-    LorentzVector p4() { return p4_; }
-    float pt() { return pt_; }
-    float eta() { return eta_; }
-    float phi() { return phi_; }
-
-  private:
-    int id_;
-    float pt_ = 0.;
-    float eta_ = 0.;
-    float phi_ = 0.;
-    LorentzVector p4_;
-    unsigned int idx_;
-};
-typedef std::pair<Jet, Jet> DiJet;
-typedef std::vector<Jet> Jets;
-
 std::ostream &operator<<(std::ostream &os, Lepton &lep) {
     std::string lepstr = (abs(lep.id()) == 11) ? "Electron" : "Muon";
     return os << "<" << lepstr << " id=" << std::showpos << setw(3) << lep.id() << std::noshowpos << ", idx=" << setw(2)
@@ -106,23 +79,36 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leps, bool verbose);
 std::pair<int,int> get_n_mu_el(Leptons &leps);
 
 struct Jet {
-  public:
-    Jet(int idxx):idx_(idxx) {}
-    LorentzVector p4() {return nt.Jet_p4()[idx_];}
-    float pt() {return p4().pt();}
-    float eta() {return p4().eta();}
-    float phi() {return p4().phi();}
+    Jet(unsigned int idxx = 0) : idx_(idxx) {
+        id_ = nt.Jet_jetId()[idx_];
+        pt_ = nt.Jet_pt()[idx_];
+        eta_ = nt.Jet_eta()[idx_];
+        phi_ = nt.Jet_phi()[idx_];
+        p4_ = nt.Jet_p4()[idx_];
+    }
+    int id() { return id_; }
+    bool is_btag() { return false; } // { return ((pt_ > 25.0) && (Jet_btagDeepB()[idx_] > 0.4941)); }
+    unsigned int idx() const { return idx_; }
+    LorentzVector p4() { return p4_; }
+    float pt() { return pt_; }
+    float eta() { return eta_; }
+    float phi() { return phi_; }
     float bdisc() {return nt.Jet_btagDeepFlavB()[idx_];}
     bool isBtag() {return bdisc()>0.277;}
     int hadronFlavor() {return nt.Jet_hadronFlavour()[idx_];}
     int partonFlavor() {return nt.Jet_partonFlavour()[idx_];}
-    bool passJetId() {return nt.Jet_jetId()[idx_]>1;}
-    int idx() const {return idx_;}
-    bool operator==(const Jet& other) {return (this->idx_==other.idx());}
- private:
-    int idx_;
-};
+    bool passJetId() {return id_>1;}
+    bool operator==(const Jet& other) {return (idx_==other.idx());}
 
+  private:
+    int id_;
+    float pt_ = 0.;
+    float eta_ = 0.;
+    float phi_ = 0.;
+    LorentzVector p4_;
+    unsigned int idx_;
+};
+typedef std::pair<Jet, Jet> DiJet;
 typedef std::vector<Jet> Jets;
 
 // perform lepton-jet overlap removal
@@ -139,8 +125,5 @@ bool lepsort (Lepton i,Lepton j);
 bool jetptsort (Jet i,Jet j);
 
 bool pass_lep_pt_eta(Lepton &lep);
-
-bool lepsort(Lepton i,Lepton j);
-bool jetptsort(Jet i,Jet j);
 
 #endif

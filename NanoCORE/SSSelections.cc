@@ -120,13 +120,11 @@ std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
             if (skip) { continue; }
         }
         if (fabs(Jet_eta()[ijet]) > 2.4) { continue; }
-        Jet tmp = Jet(ijet);
         if (pt > 25. && discs[ijet] > 0.4941) { nbtags += 1; }
         if (pt < 40) { continue; }
         ht += pt;
         njets++;
-        jets.push_back(tmp);
-    }
+    } // end loop over jets
     return std::make_tuple(njets, nbtags, ht);
 }
 
