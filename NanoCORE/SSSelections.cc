@@ -219,7 +219,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     // get loose leptons and create ML hypotheses
     for (unsigned int idx=0; idx<hyps.size();idx++) {
         Leptons tmphyp = hyps[idx];
-        if (tmphyp.size()==2) continue;
+        if (tmphyp.size()!=2) continue;
         Lepton lep1 = hyps[idx][0];
         Lepton lep2 = hyps[idx][1];
         for (unsigned int lidx=0;lidx<leptons.size();lidx++) {
@@ -236,7 +236,6 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     std::cout << "Found " << all_ml_hyps.size() << " multilepton hyps." << std::endl;
 
     // find good ML hyps
-    std::vector<std::pair<int,int> > hyp_type_index; // first = hyp_type, second = index in good_ml_hyps
     if (all_ml_hyps.size() > 0) {
         for (unsigned int idx=0; idx<all_ml_hyps.size();idx++) {
             Leptons mlhyp = all_ml_hyps[idx];
@@ -244,8 +243,8 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
             int nloose = 0;
             for (unsigned int hidx=0;hidx<mlhyp.size();hidx++) {
                 Lepton lep = mlhyp[hidx];
-                ntight += lep.is_tight();
-                nloose += lep.is_loose();
+                if ( lep.is_tight() ) ntight += 1;
+                if ( lep.is_loose() ) nloose += 1;
                 // remember to check for mass resonances
                 std::pair<int,int> z_mass_info = makesResonance(leptons,mlhyp[0],lep,91,15);
                 std::pair<int,int> gs_mass_info = makesResonance(leptons,mlhyp[0],lep,0,12);
@@ -262,7 +261,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     // now let's find all possible dilepton hyps too
     for (unsigned int idx=0; idx<hyps.size();idx++) {
         Leptons tmp_hyp = hyps[idx];
-        if (tmp_hyp.size()==2) continue;
+        if (tmp_hyp.size()!=2) continue;
         Lepton lep1 = hyps[idx][0];
         Lepton lep2 = hyps[idx][1];
 
@@ -295,8 +294,8 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         if (!(pass_lep_pt_eta(lep1) && pass_lep_pt_eta(lep2))) continue;
         if (!(lep1.is_loose() && lep2.is_loose())) continue;
         bool isss = lep1.charge() == lep2.charge();
-        int ntight = (lep1.idlevel() == SS::IDtight) + (lep2.idlevel() == SS::IDtight);
-        int nloose = (lep1.idlevel() == SS::IDfakable) + (lep2.idlevel() == SS::IDfakable);
+        int ntight = lep1.is_tight() + lep2.is_tight();
+        int nloose = lep1.is_loose() + lep2.is_loose();
 
         // Veto SS ee or any OSSF, with mll < 12
         if ((isss && lep1.is_el() && lep2.is_el()) || (lep1.id() == -lep2.id())) {
@@ -319,13 +318,13 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
                 hyp4s.push_back({lep1, lep2});
             else
                 hyp4s.push_back({lep2, lep1});
-        } else if (nloose == 2 && isss) {
+        } else if (nloose == 2 && ntight == 0 && isss) {
             DEBUG_hyp_class = 7;
             if (lep1.pt() > lep2.pt())
                 hyp7s.push_back({lep1, lep2});
             else
                 hyp7s.push_back({lep2, lep1});
-        } else if (ntight == 1 && nloose == 1 && isss) {
+        } else if (ntight == 1 && nloose == 2 && isss) {
             DEBUG_hyp_class = 6;
             if (lep1.pt() > lep2.pt())
                 hyp6s.push_back({lep1, lep2});
@@ -365,7 +364,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         ret_hyps = hyp7s;
         best_hyp_type = 7;
     }
-    if ((best_hyp_type <= 0) || (ret_hyps.size() < 1)) return {best_hyp_type, best_hyp};
+    if ((best_hyp_type <= 0) || (ret_hyps.size() == 1)) return {best_hyp_type, best_hyp};
     if (ret_hyps.size() == 1) {
         best_hyp = ret_hyps[0];
     }
@@ -659,7 +658,7 @@ Leptons getLooseLeptons() {
     Leptons leps = getLeptons();
     Leptons loose_leps;
     for (auto lep : leps) {
-        if ( !(lep.idlevel() == SS::IDLevel::IDfakable || lep.idlevel() == SS::IDlevel::IDtight) ) continue;
+        if ( !(lep.idlevel() == SS::IDLevel::IDfakable || lep.idlevel() == SS::IDLevel::IDtight) ) continue;
         if (std::fabs(lep.eta())>2.4) continue;
         float min_lep_pt = lep.is_mu() ? 20. : 25.;
         if (lep.pt() < min_lep_pt) continue;
