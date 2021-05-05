@@ -362,10 +362,10 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         best_hyp_type = 7;
     }
     if ((best_hyp_type <= 0) || (ret_hyps.size() < 1)) return {best_hyp_type, best_hyp};
-    if (hyps.size() == 1) {
+    if (ret_hyps.size() == 1) {
         best_hyp = ret_hyps[0];
     }
-    else if (hyps.size() > 1) { // if more than one hyp, prefer those with more muons then greater sum pt
+    else if (ret_hyps.size() > 1) { // if more than one hyp, prefer those with more muons then greater sum pt
         best_hyp = ret_hyps[0];
         for (unsigned int i = 1; i < ret_hyps.size(); i++) {
             Leptons hyp_leps = ret_hyps[i];
