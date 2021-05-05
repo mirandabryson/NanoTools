@@ -217,7 +217,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     // get loose leptons and create ML hypotheses
     for (unsigned int idx=0; idx<hyps.size();idx++) {
         Leptons tmphyp = hyps[idx];
-        if (tmphyp.size()<2) continue;
+        if (tmphyp.size()==2) continue;
         Lepton lep1 = hyps[idx][0];
         Lepton lep2 = hyps[idx][1];
         for (unsigned int lidx=0;lidx<leptons.size();lidx++) {
@@ -226,7 +226,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
             if (!pass_lep_pt_eta(lep)) continue;
             if (!lep.is_loose()) continue;
             Leptons tmp_hyp{lep1,lep2,lep};
-            sort(tmp_hyp.begin(),tmp_hyp.end(),lepsort);
+            sort(tmp_hyp.begin(),tmp_hyp.end(),lepsort); // sort leptons by pt
             all_ml_hyps.push_back(tmp_hyp);
         }
     } // end loop creating ML hyps
@@ -242,7 +242,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
                 Lepton lep = mlhyp[hidx];
                 ntight += lep.is_tight();
                 nloose += lep.is_loose();
-                // remember to veto mass resonances
+                // remember to check for mass resonances
                 std::pair<int,int> z_mass_info = makesResonance(leptons,mlhyp[0],lep,91,15);
                 std::pair<int,int> gs_mass_info = makesResonance(leptons,mlhyp[0],lep,0,12);
                 if (z_mass_info.first>=0 || gs_mass_info.first>=0) {
@@ -251,14 +251,14 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
                 }
             } // end loop over ML hyp leptons
             if (ntight>=3) hyp2s.push_back(mlhyp);
-            else if (ntight==2 && nloose>=1) hyp3s.push_back(mlhyp);
+            if (ntight==2 && nloose>=1) hyp3s.push_back(mlhyp);
         } // end loop over all ML hyps
     } // end ML hyps
 
     // now let's find all possible dilepton hyps too
     for (unsigned int idx=0; idx<hyps.size();idx++) {
         Leptons tmp_hyp = hyps[idx];
-        if (tmp_hyp.size()<2) continue;
+        if (tmp_hyp.size()==2) continue;
         Lepton lep1 = hyps[idx][0];
         Lepton lep2 = hyps[idx][1];
 
@@ -362,9 +362,10 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         best_hyp_type = 7;
     }
     if ((best_hyp_type <= 0) || (ret_hyps.size() < 1)) return {best_hyp_type, best_hyp};
-    if (hyps.size() == 1) {
+    if (ret_hyps.size() == 1) {
         best_hyp = ret_hyps[0];
-    } else if (hyps.size() > 1) {
+    }
+    else if (ret_hyps.size() > 1) { // if more than one hyp, prefer those with more muons then greater sum pt
         best_hyp = ret_hyps[0];
         for (unsigned int i = 1; i < ret_hyps.size(); i++) {
             Leptons hyp_leps = ret_hyps[i];
