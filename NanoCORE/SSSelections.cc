@@ -364,7 +364,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         ret_hyps = hyp7s;
         best_hyp_type = 7;
     }
-    if ((best_hyp_type <= 0) || (ret_hyps.size() == 1)) return {best_hyp_type, best_hyp};
+    if ((best_hyp_type <= 0) || (ret_hyps.size() == 0)) return {best_hyp_type, best_hyp};
     if (ret_hyps.size() == 1) {
         best_hyp = ret_hyps[0];
     }
