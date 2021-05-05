@@ -214,6 +214,8 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     std::vector<Leptons> hyps = make_hyps(leptons); // hyp leptons pass pt, eta and loose id
     std::vector<Leptons> all_ml_hyps;
 
+    std::cout << "Found " << hyps.size() << " dilepton hyps." << std::endl;
+
     // get loose leptons and create ML hypotheses
     for (unsigned int idx=0; idx<hyps.size();idx++) {
         Leptons tmphyp = hyps[idx];
@@ -230,6 +232,8 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
             all_ml_hyps.push_back(tmp_hyp);
         }
     } // end loop creating ML hyps
+
+    std::cout << "Found " << all_ml_hyps.size() << " multilepton hyps." << std::endl;
 
     // find good ML hyps
     std::vector<std::pair<int,int> > hyp_type_index; // first = hyp_type, second = index in good_ml_hyps
