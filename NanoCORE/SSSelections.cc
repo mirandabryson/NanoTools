@@ -659,7 +659,7 @@ Leptons getLooseLeptons() {
     Leptons leps = getLeptons();
     Leptons loose_leps;
     for (auto lep : leps) {
-        if (lep.idlevel() >= SS::IDLevel::IDfakable) continue;
+        if !(lep.idlevel() == SS::IDLevel::IDfakable || lep.idlevel() == SS::IDlevel::IDtight) continue;
         if (std::fabs(lep.eta())>2.4) continue;
         float min_lep_pt = lep.is_mu() ? 20. : 25.;
         if (lep.pt() < min_lep_pt) continue;
