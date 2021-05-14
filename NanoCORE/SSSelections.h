@@ -117,8 +117,8 @@ std::vector<bool> cleanJets(Jets &jets, Leptons &leps);
 
 // get all good jets and bjets
 // applies kinematic (eta,pt) cuts, jet ID, and b-tagging
-std::pair<Jets, Jets> getJets();
-std::pair<Jets, Jets> getJets(Leptons &leps);
+std::pair<Jets, Jets> getJets(float min_jet_pt=40., float min_bjet_pt=25.);
+std::pair<Jets, Jets> getJets(Leptons &leps,float min_jet_pt=40., float min_bjet_pt=25.);
 
 //Sorting functions
 bool lepsort (Lepton i,Lepton j);

@@ -58,15 +58,15 @@ std::vector<Leptons> make_hyps(Leptons &leps) {
 // get all leptons passing some minimal pt cuts
 Leptons getLeptons() {
     Leptons leptons;
-    auto mupts = Muon_pt();
+    auto mupts = nt.Muon_pt();
     for (unsigned int imu = 0; imu < mupts.size(); imu++) {
         if (mupts[imu] < 5) { continue; }
-        leptons.push_back(Lepton(Muon_pdgId()[imu], imu));
+        leptons.push_back(Lepton(nt.Muon_pdgId()[imu], imu));
     }
-    auto epts = Electron_pt();
+    auto epts = nt.Electron_pt();
     for (unsigned int iel = 0; iel < epts.size(); iel++) {
         if (epts[iel] < 7) { continue; }
-        leptons.push_back(Lepton(Electron_pdgId()[iel], iel));
+        leptons.push_back(Lepton(nt.Electron_pdgId()[iel], iel));
     }
     return leptons;
 }
@@ -597,9 +597,7 @@ std::vector<bool> cleanJets(Leptons &leps) {
         return ret;
 }
 
-std::pair<Jets, Jets> getJets() {
-    float min_jet_pt = 40;
-    float min_bjet_pt = 20;
+std::pair<Jets, Jets> getJets(float min_jet_pt, float min_bjet_pt) {
     Jets jets_;
     Jets bjets_;
     for (unsigned int idx=0; idx<nt.nJet();idx++){
@@ -613,9 +611,7 @@ std::pair<Jets, Jets> getJets() {
     return std::make_pair(jets_,bjets_);
 }
 
-std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps) {
-    float min_jet_pt = 40;
-    float min_bjet_pt = 20;
+std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps, float min_jet_pt, float min_bjet_pt) {
     Jets  jets_;
     // get all jets passing kinematics (pt,eta) and jet ID
     for (unsigned int idx=0; idx<nt.nJet();idx++){
@@ -624,21 +620,20 @@ std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps) {
         if (jet.pt() < min_bjet_pt) continue;
         if (!jet.passJetId()) continue;
         if (jet.pt() > min_jet_pt) jets_.push_back(jet);
+        else if (jet.pt() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
     }
 
+    Jets ret_jets_;
+    Jets ret_bjets_;
     // remove jets overlapping with our selected leptons
     std::vector<bool> jet_flags = cleanJets(jets_,leps);
-    unsigned int tidx = 0;
-    for (auto flag : jet_flags) {
-        if (!flag) jets_.erase(jets_.begin()+tidx);
-        else tidx++;
+    for (unsigned int idx=0; idx<jet_flags.size(); idx++) {
+        if (!jet_flags[idx]) continue;
+        if (jets_[idx].pt() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
+        if (jets_[idx].pt() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
     }
 
-    // get b-tagged jets
-    Jets bjets_;
-    for (auto jet : jets_) {if (jet.isBtag()) bjets_.push_back(jet);}
-
-    return std::make_pair(jets_,bjets_);
+    return std::make_pair(ret_jets_,ret_bjets_);
 }
 
 
