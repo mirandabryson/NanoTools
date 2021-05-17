@@ -15,20 +15,20 @@ struct Lepton {
             p4_ = (abs(id_) == 11 ? nt.Electron_p4()[idx_] : nt.Muon_p4()[idx_]);
             miniIso_ = (abs(id_) == 11 ? nt.Electron_miniPFRelIso_all()[idx_] : nt.Muon_miniPFRelIso_all()[idx_]);
             genPartFlav_ = (abs(id_) == 11 ? nt.Electron_genPartFlav()[idx_] : nt.Muon_genPartFlav()[idx_]);
-            genPartFlav_ = (abs(id_) == 11 ? nt.Electron_genPartFlav()[idx_] : nt.Muon_genPartFlav()[idx_]);
             idlevel_ = whichLeptonLevel(id_, idx_);
             int mcidx = (abs(id_) == 11 ? nt.Electron_genPartIdx()[idx_] : nt.Muon_genPartIdx()[idx_]);
             mcid_ = nt.GenPart_pdgId()[mcidx];
         }
     }
     void set_idlevel(int idlevel) { idlevel_ = idlevel; }
+    unsigned int idx() const { return idx_; }
     int id() const { return id_; }
     int absid() { return abs(id_); }
     int is_el() { return abs(id_) == 11; }
     int is_mu() { return abs(id_) == 13; }
     int charge() { return -1 * id_ / abs(id_); }
-    unsigned int idx() const { return idx_; }
     int idlevel() { return idlevel_; }
+    int mcid() { return mcid_; }
     LorentzVector p4() { return p4_; }
     float pt() { return pt_; }
     float eta() { return eta_; }
@@ -36,7 +36,7 @@ struct Lepton {
     float miniIso() { return miniIso_;}
     int genPartFlav() {return genPartFlav_;}
     bool isFake() {return (genPartFlav_!=1 && genPartFlav_!=15);}
-    bool isFlip() {return (id_=-1*mcid_);}
+    bool isFlip() {return (id_==-1*mcid_);}
     bool is_loose() {return (idlevel_==SS::IDLevel::IDfakable || idlevel_==SS::IDLevel::IDtight);}
     bool is_tight() {return (idlevel_==SS::IDLevel::IDtight);}
     bool operator==(const Lepton& other) {return ((this->id_ == other.id()) && (this->idx_==other.idx()));}
