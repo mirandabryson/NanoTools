@@ -209,6 +209,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     std::vector<Leptons> hyp5s;
     std::vector<Leptons> hyp6s;
     std::vector<Leptons> hyp7s;
+    std::vector<Leptons> hyp8s;
 
     // make all possible pairs of leptons
     std::vector<Leptons> hyps = make_hyps(leptons); // hyp leptons pass pt, eta and loose id
@@ -255,6 +256,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
             } // end loop over ML hyp leptons
             if (ntight>=3) hyp2s.push_back(mlhyp);
             if (ntight==2 && nloose>=1) hyp3s.push_back(mlhyp);
+            if (ntight==1 && nloose>=2) hyp8s.push_back(mlhyp);
         } // end loop over all ML hyps
     } // end ML hyps
 
@@ -342,6 +344,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
 
     std::vector<Leptons> ret_hyps;
     // Priority order - lower number is higher priority
+    // this is now broken because hyp 8 is TFF
     if (hyp1s.size() > 0) {
         ret_hyps = hyp1s;
         best_hyp_type = 1;
@@ -357,6 +360,9 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     } else if (hyp5s.size() > 0) {
         ret_hyps = hyp5s;
         best_hyp_type = 5;
+    } else if (hyp8s.size() > 0) {
+        ret_hyps = hyp8s;
+        best_hyp_type = 8;
     } else if (hyp6s.size() > 0) {
         ret_hyps = hyp6s;
         best_hyp_type = 6;
