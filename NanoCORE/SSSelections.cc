@@ -2,8 +2,12 @@
 #include "Config.h"
 #include "ElectronSelections.h"
 #include "MuonSelections.h"
+#include "Math/VectorUtil.h"
 
 using namespace tas;
+
+bool lepsort (Lepton i,Lepton j) {return ( i.pt()>j.pt() );}
+bool jetptsort (Jet i,Jet j) { return (i.pt()>j.pt()); }
 
 Leptons getLeptons() {
     Leptons leptons;
@@ -25,7 +29,7 @@ std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
     float ht = 0;
     int nbtags = 0;
     auto jetpts = Jet_pt();
-    vector<float> discs = Jet_btagDeepB();
+    vector<float> discs = Jet_btagDeepFlavB();
     for (unsigned int ijet = 0; ijet < jetpts.size(); ijet += 1) {
         float pt = jetpts[ijet];
         if (!(Jet_jetId()[ijet] & (1 << 1))) { continue; }
@@ -68,12 +72,64 @@ std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
             if (skip) { continue; }
         }
         if (fabs(Jet_eta()[ijet]) > 2.4) { continue; }
-        if (pt > 25. && discs[ijet] > 0.4941) { nbtags += 1; }
+        if (Jet_jetId()[ijet] <= 1) { continue; }
+        if (pt > 25. && discs[ijet] > 0.2770) { nbtags += 1; }
         if (pt < 40) { continue; }
         ht += pt;
         njets++;
     }
     return std::make_tuple(njets, nbtags, ht);
+}
+
+std::tuple<int, int, int, int, float> getCleanJetInfo(Leptons &leps, int variation) {
+    int btagCut = 0;
+    if(nt.year()==2016){ btagCut = 0.3093; }
+    else if (nt.year()==2017){ btagCut = 0.3033; }
+    else if (nt.year()==2018){ btagCut = 0.2770; }
+    int njets = 0;
+    float ht = 0;
+    int nbtags = 0;
+    auto jetpts = Jet_pt();
+    vector<float> discs = Jet_btagDeepFlavB();
+    vector<int> jetsToClean;
+    for (unsigned int ijet = 0; ijet < jetpts.size(); ijet += 1) {
+        float pt = jetpts[ijet];
+        if (!(Jet_jetId()[ijet] & (1 << 1))) { continue; }
+        if (fabs(Jet_eta()[ijet]) > 2.4) { continue; }
+        if ((pt > 25. && discs[ijet] > btagCut)||(pt > 40)) { jetsToClean.push_back(ijet); }
+    }
+    //once we've saved the indices of jets that pass kinematic requirements, time to clean them
+    for (auto &lep : leps) {
+        float mindr = 0.41;
+        int minidx = -1;
+        //find jet closest to lepton if within deltaR of 0.4
+        for (unsigned int j = 0; j < jetsToClean.size(); j += 1){
+            int iGoodJet = jetsToClean[j];
+            float dr = ROOT::Math::VectorUtil::DeltaR(lep.p4(),Jet_p4()[iGoodJet]);
+            if (dr < mindr){
+                mindr = dr;
+                minidx = j;
+            }
+        }
+        if (minidx>=0) { jetsToClean.erase( jetsToClean.begin()+minidx ); }
+    }
+    //ok, now jetsToClean no longer contains jets that are closest to a lepton if deltaR < 0.4
+    //now we can use this information to count our btags and jets
+    for (unsigned int j = 0; j < jetsToClean.size(); j += 1){
+        int iJet = jetsToClean[j];
+        float pt = jetpts[iJet];
+        float bdisc = discs[iJet];
+        if (pt > 25. && bdisc > btagCut) { nbtags++; }
+        if (pt < 40) { continue; }
+        ht += pt;
+        njets++;
+    }
+    sort(jetsToClean.begin(), jetsToClean.end(), [](int a, int b) {
+        return nt.Jet_pt()[a] > nt.Jet_pt()[b];
+    });
+    int leadIdx = jetsToClean[0];
+    int subleadIdx = jetsToClean[1];
+    return std::make_tuple(njets, nbtags, leadIdx, subleadIdx, ht);
 }
 
 std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, float mass, float window) {
@@ -308,4 +364,92 @@ SS::IDLevel whichLeptonLevel(int id, int idx) {
     } else {
         return SS::IDdefault;
     }
+}
+
+std::vector<bool> cleanJets(Jets &jets, Leptons &leps) {
+        std::vector<bool> ret;
+        for (unsigned int idx=0; idx<jets.size();idx++) {ret.push_back(1);}
+        for (auto lep : leps) {
+            float mindr = 0.41;
+            int minidx=-1;
+            for (unsigned int idx=0; idx<jets.size(); idx++) {
+                float dr = ROOT::Math::VectorUtil::DeltaR(lep.p4(),jets[idx].p4());
+                if (dr < mindr) {
+                    mindr = dr;
+                    minidx = idx;
+                }
+            }
+            if (minidx>=0) {ret[minidx]=0;}
+        }
+        return ret;
+}
+
+std::vector<bool> cleanJets(Leptons &leps) {
+        std::vector<bool> ret;
+        Jets jets;
+        for (unsigned int idx=0; idx<nt.nJet();idx++) {
+            ret.push_back(1);
+            jets.push_back(Jet(idx));
+        }
+        for (auto lep : leps) {
+            float mindr = 0.41;
+            int minidx=-1;
+            for (unsigned int idx=0; idx<jets.size(); idx++) {
+                float dr = ROOT::Math::VectorUtil::DeltaR(lep.p4(),jets[idx].p4());
+                if (dr < mindr) {
+                    mindr = dr;
+                    minidx = idx;
+                }
+            }
+            if (minidx>=0) {ret[minidx]=0;}
+        }
+        return ret;
+}
+
+std::pair<Jets, Jets> getJets(float min_jet_pt, float min_bjet_pt) {
+    Jets jets_;
+    Jets bjets_;
+    for (unsigned int idx=0; idx<nt.nJet();idx++){
+        Jet jet(idx);
+        if (std::fabs(jet.eta()) > 2.4) continue;
+        if (jet.pt() < min_bjet_pt) continue;
+        if (!jet.passJetId()) continue;
+        if (jet.pt() > min_jet_pt) jets_.push_back(jet);
+        if (jet.isBtag()) bjets_.push_back(jet);
+    }
+    return std::make_pair(jets_,bjets_);
+}
+
+std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps, float min_jet_pt, float min_bjet_pt) {
+    Jets  jets_;
+    // get all jets passing kinematics (pt,eta) and jet ID
+    for (unsigned int idx=0; idx<nt.nJet();idx++){
+        Jet jet(idx);
+        if (std::fabs(jet.eta()) > 2.4) continue;
+        if (jet.pt() < min_bjet_pt) continue;
+        if (!jet.passJetId()) continue;
+        if (jet.pt() > min_jet_pt) jets_.push_back(jet);
+        else if (jet.pt() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
+    }
+
+    Jets ret_jets_;
+    Jets ret_bjets_;
+    // remove jets overlapping with our selected leptons
+    std::vector<bool> jet_flags = cleanJets(jets_,leps);
+    for (unsigned int idx=0; idx<jet_flags.size(); idx++) {
+        if (!jet_flags[idx]) continue;
+        if (jets_[idx].pt() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
+        if (jets_[idx].pt() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
+    }
+
+    return std::make_pair(ret_jets_,ret_bjets_);
+}
+
+Genparts getGenparts() {
+    Genparts genparts;
+    auto genpartpts = GenPart_pt();
+    for (unsigned int igp = 0; igp < genpartpts.size(); igp++) {
+        genparts.push_back(Genpart(GenPart_pdgId()[igp], igp));
+    }
+    return genparts;
 }

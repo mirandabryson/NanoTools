@@ -4476,6 +4476,9 @@ void Nano::ParseYear(TTree* tree) {
     else if (full_file_path.Contains("Run2018")) year_ = 2018;
     else if (full_file_path.Contains("Run2017")) year_ = 2017;
     else if (full_file_path.Contains("Run2016")) year_ = 2016;
+    else if (full_file_path.Contains("2018")) year_ = 2018;
+    else if (full_file_path.Contains("2017")) year_ = 2017;
+    else if (full_file_path.Contains("2016")) year_ = 2016;
     else throw std::runtime_error("Nano::parseYear():: ERROR - Failed to recognize which year this NanoAOD is !\nPlease make sure the path has one of the following keywords:\n  2016: 'Run2016' or 'RunIISummer16NanoAOD'\n  2017: 'Run2017' or 'RunIIFall17NanoAOD'\n  2018: 'Run2018' or 'RunIIAutumn18NanoAOD'\nOR, use Nano::SetYear(int year) before Nano::Init()");
 }
 
