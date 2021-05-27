@@ -82,7 +82,7 @@ template <typename T1, typename T2> std::ostream &operator<<(std::ostream &os, s
 
 Leptons getLeptons();
 std::tuple<int, int, float> getJetInfo(vector<Lepton> &leps, int variation = 0);
-std::tuple<int, int, int, int, float> getCleanJetInfo(vector<Lepton> &leps, int variation = 0);
+std::tuple<int, int, float> getCleanJetInfo(vector<Lepton> &leps, int variation = 0);
 std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, float mass, float window);
 std::pair<int, Hyp> getBestHyp(vector<Lepton> &leptons, bool verbose);
 void dumpLeptonProperties(Lepton lep);
@@ -173,5 +173,6 @@ typedef std::vector<Genpart> Genparts;
 
 Genparts getGenparts();
 
+bool pass_lep_pt_eta(Lepton &lep);
 
 #endif

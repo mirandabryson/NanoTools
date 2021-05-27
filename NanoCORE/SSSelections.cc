@@ -24,6 +24,14 @@ Leptons getLeptons() {
     return leptons;
 }
 
+// check if lepton passes pt,eat cuts
+bool pass_lep_pt_eta(Lepton &lep) {
+    float minpt = lep.is_el() ? 25. : 20.;
+    float maxeta = lep.is_el() ? 2.5 : 2.4;
+    if (lep.pt() < minpt || fabs(lep.eta()) > maxeta) return false;
+    return true;
+}
+
 std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
     int njets = 0;
     float ht = 0;
@@ -81,8 +89,8 @@ std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
     return std::make_tuple(njets, nbtags, ht);
 }
 
-std::tuple<int, int, int, int, float> getCleanJetInfo(Leptons &leps, int variation) {
-    int btagCut = 0;
+std::tuple<int, int, float> getCleanJetInfo(Leptons &leps, int variation) {
+    float btagCut = 0;
     if(nt.year()==2016){ btagCut = 0.3093; }
     else if (nt.year()==2017){ btagCut = 0.3033; }
     else if (nt.year()==2018){ btagCut = 0.2770; }
@@ -124,12 +132,7 @@ std::tuple<int, int, int, int, float> getCleanJetInfo(Leptons &leps, int variati
         ht += pt;
         njets++;
     }
-    sort(jetsToClean.begin(), jetsToClean.end(), [](int a, int b) {
-        return nt.Jet_pt()[a] > nt.Jet_pt()[b];
-    });
-    int leadIdx = jetsToClean[0];
-    int subleadIdx = jetsToClean[1];
-    return std::make_tuple(njets, nbtags, leadIdx, subleadIdx, ht);
+    return std::make_tuple(njets, nbtags, ht);
 }
 
 std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, float mass, float window) {
