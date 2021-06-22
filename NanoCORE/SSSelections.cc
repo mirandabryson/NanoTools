@@ -198,6 +198,7 @@ std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, floa
 // OS: 5
 // TL: 6
 // LL: 7
+// TLL: 8
 std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     int best_hyp_type = -1;
     Leptons best_hyp;
@@ -215,7 +216,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     std::vector<Leptons> hyps = make_hyps(leptons); // hyp leptons pass pt, eta and loose id
     std::vector<Leptons> all_ml_hyps;
 
-    std::cout << "Found " << hyps.size() << " dilepton hyps." << std::endl;
+    if(verbose) {std::cout << "Found " << hyps.size() << " dilepton hyps." << std::endl;}
 
     // get loose leptons and create ML hypotheses
     for (unsigned int idx=0; idx<hyps.size();idx++) {
@@ -234,7 +235,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         }
     } // end loop creating ML hyps
 
-    std::cout << "Found " << all_ml_hyps.size() << " multilepton hyps." << std::endl;
+    if(verbose) {std::cout << "Found " << all_ml_hyps.size() << " multilepton hyps." << std::endl;}
 
     // find good ML hyps
     if (all_ml_hyps.size() > 0) {
@@ -307,6 +308,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
         auto gammastar_result = makesResonance(leptons, lep1, lep2, 0., 12.);
         bool extraZ = z_result.first >= 0;
         bool extraGammaStar = gammastar_result.first >= 0;
+        if(verbose){cout << extraZ << " " << extraGammaStar << endl;}
         int DEBUG_hyp_class = -1;
         if ((extraZ || extraGammaStar) && isss) {
             DEBUG_hyp_class = 1;

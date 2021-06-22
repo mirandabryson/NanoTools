@@ -6640,6 +6640,9 @@ protected:
     int Pileup_sumLOOT_;
     TBranch *b_Pileup_sumLOOT_;
     bool loaded_Pileup_sumLOOT_;
+    float puWeight_;
+    TBranch *b_puWeight_;
+    bool loaded_puWeight_;
     float PuppiMET_phi_;
     TBranch *b_PuppiMET_phi_;
     bool loaded_PuppiMET_phi_;
@@ -9303,6 +9306,7 @@ public:
     const float &Pileup_pudensity();
     const int &Pileup_sumEOOT();
     const int &Pileup_sumLOOT();
+    const float &puWeight();
     const float &PuppiMET_phi();
     const float &PuppiMET_phiJERUp();
     const float &PuppiMET_phiJESUp();
@@ -11556,7 +11560,8 @@ namespace tas {
     const float &Pileup_nTrueInt(); // the true mean number of the poisson distribution for this event from which the number of interactions each bunch crossing has been sampled
     const float &Pileup_pudensity(); // PU vertices / mm
     const int &Pileup_sumEOOT(); // number of early out of time pileup
-    const int &Pileup_sumLOOT(); // number of late out of time pileup
+    const int &Pileup_sumLOOT();
+    const float &puWeight();
     const float &PuppiMET_phi(); // phi
     const float &PuppiMET_phiJERUp(); // JER up phi
     const float &PuppiMET_phiJESUp(); // JES up phi

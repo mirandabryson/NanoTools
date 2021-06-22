@@ -9,15 +9,19 @@ bool isLeptonLevel(SS::IDLevel idlevel, int id, int idx);
 struct Lepton {
     Lepton(int id = 0, unsigned int idx = 0) : id_(id), idx_(idx) {
         if (id != 0) {
+            isData_ = nt.isData();
             pt_ = (abs(id_) == 11 ? nt.Electron_pt()[idx_] : nt.Muon_pt()[idx_]);
             eta_ = (abs(id_) == 11 ? nt.Electron_eta()[idx_] : nt.Muon_eta()[idx_]);
             phi_ = (abs(id_) == 11 ? nt.Electron_phi()[idx_] : nt.Muon_phi()[idx_]);
             p4_ = (abs(id_) == 11 ? nt.Electron_p4()[idx_] : nt.Muon_p4()[idx_]);
             miniIso_ = (abs(id_) == 11 ? nt.Electron_miniPFRelIso_all()[idx_] : nt.Muon_miniPFRelIso_all()[idx_]);
-            genPartFlav_ = (abs(id_) == 11 ? nt.Electron_genPartFlav()[idx_] : nt.Muon_genPartFlav()[idx_]);
+            if (!isData_){
+                genPartFlav_ = (abs(id_) == 11 ? nt.Electron_genPartFlav()[idx_] : nt.Muon_genPartFlav()[idx_]);
+                int mcidx = (abs(id_) == 11 ? nt.Electron_genPartIdx()[idx_] : nt.Muon_genPartIdx()[idx_]);
+                mcid_ = nt.GenPart_pdgId()[mcidx];
+            }
             idlevel_ = whichLeptonLevel(id_, idx_);
-            int mcidx = (abs(id_) == 11 ? nt.Electron_genPartIdx()[idx_] : nt.Muon_genPartIdx()[idx_]);
-            mcid_ = nt.GenPart_pdgId()[mcidx];
+
         }
     }
     void set_idlevel(int idlevel) { idlevel_ = idlevel; }
@@ -28,18 +32,19 @@ struct Lepton {
     int is_mu() { return abs(id_) == 13; }
     int charge() { return -1 * id_ / abs(id_); }
     int idlevel() { return idlevel_; }
-    int mcid() { return mcid_; }
     LorentzVector p4() { return p4_; }
     float pt() { return pt_; }
     float eta() { return eta_; }
     float phi() { return phi_; }
     float miniIso() { return miniIso_;}
-    int genPartFlav() {return genPartFlav_;}
-    bool isFake() {return (genPartFlav_!=1 && genPartFlav_!=15);}
-    bool isFlip() {return (id_==-1*mcid_);}
     bool is_loose() {return (idlevel_==SS::IDLevel::IDfakable || idlevel_==SS::IDLevel::IDtight);}
     bool is_tight() {return (idlevel_==SS::IDLevel::IDtight);}
     bool operator==(const Lepton& other) {return ((this->id_ == other.id()) && (this->idx_==other.idx()));}
+    int mcid() { if (!isData_) {return mcid_;} else {return -1;} }
+    int genPartFlav() { if (!isData_) {return genPartFlav_;} else {return -1;} }
+    bool isFake() { if (!isData_) {return (genPartFlav_!=1 && genPartFlav_!=15);} else {return 0;} }
+    bool isFlip() { if (!isData_) {return (id_==-1*mcid_);} else {return 0;} }
+    
 
   private:
     int id_;
@@ -52,6 +57,7 @@ struct Lepton {
     float miniIso_ = -1.;
     unsigned int idx_;
     int idlevel_ = SS::IDdefault;
+    bool isData_;
 };
 
 typedef std::pair<Lepton, Lepton> Hyp;
@@ -94,7 +100,12 @@ struct Jet {
     float eta() { return eta_; }
     float phi() { return phi_; }
     float bdisc() {return nt.Jet_btagDeepFlavB()[idx_];}
-    bool isBtag() {return bdisc()>0.277;}
+    bool isBtag() {
+        if (nt.year()==2016) {return bdisc()>0.3093;}
+        else if (nt.year()==2017) {return bdisc()>0.3033;}
+        else if (nt.year()==2018) {return bdisc()>0.2770;}
+        else {return false;}
+    }
     int hadronFlavor() {return nt.Jet_hadronFlavour()[idx_];}
     int partonFlavor() {return nt.Jet_partonFlavour()[idx_];}
     bool passJetId() {return id_>1;}

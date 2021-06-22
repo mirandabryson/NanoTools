@@ -4150,6 +4150,8 @@ void Nano::Init(TTree *tree) {
     if (b_Pileup_sumEOOT_) { b_Pileup_sumEOOT_->SetAddress(&Pileup_sumEOOT_); }
     b_Pileup_sumLOOT_ = tree->GetBranch("Pileup_sumLOOT");
     if (b_Pileup_sumLOOT_) { b_Pileup_sumLOOT_->SetAddress(&Pileup_sumLOOT_); }
+    b_puWeight_ = tree->GetBranch("puWeight");
+    if (b_puWeight_) { b_puWeight_->SetAddress(&puWeight_); }
     b_PuppiMET_phi_ = tree->GetBranch("PuppiMET_phi");
     if (b_PuppiMET_phi_) { b_PuppiMET_phi_->SetAddress(&PuppiMET_phi_); }
     b_PuppiMET_phiJERUp_ = tree->GetBranch("PuppiMET_phiJERUp");
@@ -6580,6 +6582,7 @@ void Nano::GetEntry(unsigned int idx) {
     loaded_Pileup_pudensity_ = false;
     loaded_Pileup_sumEOOT_ = false;
     loaded_Pileup_sumLOOT_ = false;
+    loaded_puWeight_ = false;
     loaded_PuppiMET_phi_ = false;
     loaded_PuppiMET_phiJERUp_ = false;
     loaded_PuppiMET_phiJESUp_ = false;
@@ -23825,6 +23828,14 @@ const int &Nano::Pileup_sumLOOT() {
     }
     return Pileup_sumLOOT_;
 }
+const float &Nano::puWeight() {
+    if (!loaded_puWeight_) {
+        if (!b_puWeight_) throw std::runtime_error("puWeight branch doesn't exist");
+        b_puWeight_->GetEntry(index);
+        loaded_puWeight_ = true;
+    }
+    return puWeight_;
+}
 const float &Nano::PuppiMET_phi() {
     if (!loaded_PuppiMET_phi_) {
         if (!b_PuppiMET_phi_) throw std::runtime_error("PuppiMET_phi branch doesn't exist");
@@ -27302,6 +27313,7 @@ namespace tas {
     const float &Pileup_pudensity() { return nt.Pileup_pudensity(); }
     const int &Pileup_sumEOOT() { return nt.Pileup_sumEOOT(); }
     const int &Pileup_sumLOOT() { return nt.Pileup_sumLOOT(); }
+    const float &puWeight() { return nt.puWeight(); }
     const float &PuppiMET_phi() { return nt.PuppiMET_phi(); }
     const float &PuppiMET_phiJERUp() { return nt.PuppiMET_phiJERUp(); }
     const float &PuppiMET_phiJESUp() { return nt.PuppiMET_phiJESUp(); }
@@ -27746,6 +27758,7 @@ namespace tas {
         else if (name == "Pileup_nPU") return nt.Pileup_nPU();
         else if (name == "Pileup_sumEOOT") return nt.Pileup_sumEOOT();
         else if (name == "Pileup_sumLOOT") return nt.Pileup_sumLOOT();
+        else if (name == "puWeight") return nt.puWeight();
         else if (name == "SoftActivityJetNjets10") return nt.SoftActivityJetNjets10();
         else if (name == "SoftActivityJetNjets2") return nt.SoftActivityJetNjets2();
         else if (name == "SoftActivityJetNjets5") return nt.SoftActivityJetNjets5();
