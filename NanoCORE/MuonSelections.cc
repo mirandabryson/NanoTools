@@ -13,7 +13,7 @@ bool SS::muonID(unsigned int idx, SS::IDLevel id_level, int year) {
     if (Muon_miniPFRelIso_all().at(idx) > 0.4) { return false; }
     if (id_level > SS::IDveto) {
         // Common (across years) fakable(loose) and tight checks
-        if (Muon_pt().at(idx) < 10.) { return false; }
+        if (Muon_pt().at(idx) < 20.) { return false; }
         if (fabs(Muon_sip3d().at(idx)) >= 4) { return false; }
         if (!Muon_mediumId().at(idx)) { return false; } // medium POG ID
         if (Muon_ptErr().at(idx) / Muon_pt().at(idx) >= 0.2) { return false; }

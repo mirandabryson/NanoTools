@@ -77,7 +77,7 @@ std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
     float ht = 0;
     int nbtags = 0;
     auto jetpts = Jet_pt();
-    vector<float> discs = Jet_btagDeepB();
+    vector<float> discs = Jet_btagDeepFlavB();
     for (unsigned int ijet = 0; ijet < jetpts.size(); ijet += 1) {
         float pt = jetpts[ijet];
         if (!(Jet_jetId()[ijet] & (1 << 1))) { continue; }
@@ -120,11 +120,12 @@ std::tuple<int, int, float> getJetInfo(Leptons &leps, int variation) {
             if (skip) { continue; }
         }
         if (fabs(Jet_eta()[ijet]) > 2.4) { continue; }
-        if (pt > 25. && discs[ijet] > 0.4941) { nbtags += 1; }
+        if (Jet_jetId()[ijet] <= 1) { continue; }
+        if (pt > 25. && discs[ijet] > 0.2770) { nbtags += 1; }
         if (pt < 40) { continue; }
         ht += pt;
         njets++;
-    } // end loop over jets
+    }
     return std::make_tuple(njets, nbtags, ht);
 }
 
@@ -644,7 +645,6 @@ std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps, float min_jet_pt, float
     return std::make_pair(ret_jets_,ret_bjets_);
 }
 
-
 Leptons getTightLeptons(){
     Leptons leps = getLeptons();
     Leptons tight_leps;
@@ -668,4 +668,5 @@ Leptons getLooseLeptons() {
         loose_leps.push_back(lep);
     }
     return loose_leps;
+
 }

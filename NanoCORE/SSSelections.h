@@ -13,6 +13,7 @@ struct Lepton {
             pt_ = (abs(id_) == 11 ? nt.Electron_pt()[idx_] : nt.Muon_pt()[idx_]);
             eta_ = (abs(id_) == 11 ? nt.Electron_eta()[idx_] : nt.Muon_eta()[idx_]);
             phi_ = (abs(id_) == 11 ? nt.Electron_phi()[idx_] : nt.Muon_phi()[idx_]);
+            mass_ = (abs(id_) == 11 ? nt.Electron_mass()[idx_] : nt.Muon_mass()[idx_]);
             p4_ = (abs(id_) == 11 ? nt.Electron_p4()[idx_] : nt.Muon_p4()[idx_]);
             miniIso_ = (abs(id_) == 11 ? nt.Electron_miniPFRelIso_all()[idx_] : nt.Muon_miniPFRelIso_all()[idx_]);
             if (!isData_){
@@ -44,7 +45,6 @@ struct Lepton {
     int genPartFlav() { if (!isData_) {return genPartFlav_;} else {return -1;} }
     bool isFake() { if (!isData_) {return (genPartFlav_!=1 && genPartFlav_!=15);} else {return 0;} }
     bool isFlip() { if (!isData_) {return (id_==-1*mcid_);} else {return 0;} }
-    
 
   private:
     int id_;
@@ -53,6 +53,7 @@ struct Lepton {
     float pt_ = 0.;
     float eta_ = 0.;
     float phi_ = 0.;
+    float mass_ = 0.;
     LorentzVector p4_;
     float miniIso_ = -1.;
     unsigned int idx_;
@@ -78,6 +79,7 @@ vector<Lepton> getLeptons();
 Leptons getTightLeptons();
 Leptons getLooseLeptons();
 std::tuple<int, int, float> getJetInfo(vector<Lepton> &leps, int variation = 0);
+std::tuple<int, int, float> getCleanJetInfo(vector<Lepton> &leps, int variation = 0);
 std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, float mass, float window);
 std::pair<int, Hyp> getBestHyp(vector<Lepton> &leptons, bool verbose);
 void dumpLeptonProperties(Lepton lep);
