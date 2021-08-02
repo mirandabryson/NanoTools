@@ -27,12 +27,28 @@ float get_sum_pt(Leptons &leps) {
     return ret;
 }
 
-// check if lepton passes pt,eat cuts
+// check if lepton passes pt,eta cuts
 bool pass_lep_pt_eta(Lepton &lep) {
-    float minpt = lep.is_el() ? 25. : 20.;
+    // float minpt = lep.is_el() ? 25. : 20.;
+    float minpt = 20.;
+
     float maxeta = lep.is_el() ? 2.5 : 2.4;
     if (lep.pt() < minpt || fabs(lep.eta()) > maxeta) return false;
     return true;
+}
+
+bool pass_hyp_lep_pt_eta(Leptons &leps) {
+    // float minpt = lep.is_el() ? 25. : 20.;
+    // float minpt = 20.;
+
+    std::vector<float> leppts;
+    for (auto lep : leps){
+        leppts.push_back(lep.pt());
+    }
+    if (*min_element(leppts.begin(),leppts.end())>20.&&*max_element(leppts.begin(),leppts.end())>25.){return true;}
+    else{return false;}
+    // if (leps.pt() < minpt || fabs(lep.eta()) > maxeta) return false;
+    // return true;
 }
 
 // make dilepton hypotheses requiring pt, eta and at least fakeable object
@@ -49,6 +65,7 @@ std::vector<Leptons> make_hyps(Leptons &leps) {
             unsigned int fidx = (lep1.pt()>lep2.pt()) ? idx : lidx;
             unsigned int sidx = (lep1.pt()<lep2.pt()) ? idx : lidx;
             Leptons tmp_hyp{leps[fidx],leps[sidx]};
+            if(!pass_hyp_lep_pt_eta(tmp_hyp)) continue;
             ret.push_back(tmp_hyp);
         }
     }
@@ -68,6 +85,7 @@ Leptons getLeptons() {
         if (epts[iel] < 7) { continue; }
         leptons.push_back(Lepton(nt.Electron_pdgId()[iel], iel));
     }
+    sort(leptons.begin(),leptons.end(),lepsort); // sort leptons by pt 
     return leptons;
 }
 
@@ -201,6 +219,7 @@ std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, floa
 // LL: 7
 // TLL: 8
 std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
+    // verbose = 1;
     int best_hyp_type = -1;
     Leptons best_hyp;
     if (leptons.size() < 2) return {best_hyp_type, best_hyp};
@@ -217,8 +236,6 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
     std::vector<Leptons> hyps = make_hyps(leptons); // hyp leptons pass pt, eta and loose id
     std::vector<Leptons> all_ml_hyps;
 
-    if(verbose) {std::cout << "Found " << hyps.size() << " dilepton hyps." << std::endl;}
-
     // get loose leptons and create ML hypotheses
     for (unsigned int idx=0; idx<hyps.size();idx++) {
         Leptons tmphyp = hyps[idx];
@@ -231,6 +248,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
             if (!pass_lep_pt_eta(lep)) continue;
             if (!lep.is_loose()) continue;
             Leptons tmp_hyp{lep1,lep2,lep};
+            if(!pass_hyp_lep_pt_eta(tmp_hyp)) continue;
             sort(tmp_hyp.begin(),tmp_hyp.end(),lepsort); // sort leptons by pt
             all_ml_hyps.push_back(tmp_hyp);
         }
@@ -647,11 +665,16 @@ std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps, float min_jet_pt, float
 
 Leptons getTightLeptons(){
     Leptons leps = getLeptons();
+    sort(leps.begin(),leps.end(),lepsort); // sort leptons by pt 
     Leptons tight_leps;
+    // int leptonCounter_ = -1;
     for (auto lep : leps) {
         if (lep.idlevel() != SS::IDLevel::IDtight) continue;
         if (std::fabs(lep.eta())>2.4) continue;
-        float min_lep_pt = lep.is_mu() ? 20. : 25.;
+        // leptonCounter_++;
+        float min_lep_pt = 20.;
+        // float min_lep_pt = lep.is_mu() ? 20. : 25.;
+        // float min_lep_pt = (leptonCounter_==0) ? 25. : 20.;
         if (lep.pt() < min_lep_pt) continue;
         tight_leps.push_back(lep);
     }
@@ -659,11 +682,16 @@ Leptons getTightLeptons(){
 }
 Leptons getLooseLeptons() {
     Leptons leps = getLeptons();
+    sort(leps.begin(),leps.end(),lepsort); // sort leptons by pt 
     Leptons loose_leps;
+    // int leptonCounter_ = -1;
     for (auto lep : leps) {
         if ( !(lep.idlevel() == SS::IDLevel::IDfakable || lep.idlevel() == SS::IDLevel::IDtight) ) continue;
         if (std::fabs(lep.eta())>2.4) continue;
-        float min_lep_pt = lep.is_mu() ? 20. : 25.;
+        // leptonCounter_++;
+        float min_lep_pt = 20.;
+        // float min_lep_pt = lep.is_mu() ? 20. : 25.;
+        // float min_lep_pt = (leptonCounter_==0) ? 25. : 20.;
         if (lep.pt() < min_lep_pt) continue;
         loose_leps.push_back(lep);
     }

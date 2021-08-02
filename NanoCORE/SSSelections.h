@@ -16,6 +16,8 @@ struct Lepton {
             mass_ = (abs(id_) == 11 ? nt.Electron_mass()[idx_] : nt.Muon_mass()[idx_]);
             p4_ = (abs(id_) == 11 ? nt.Electron_p4()[idx_] : nt.Muon_p4()[idx_]);
             miniIso_ = (abs(id_) == 11 ? nt.Electron_miniPFRelIso_all()[idx_] : nt.Muon_miniPFRelIso_all()[idx_]);
+            dxy_ = (abs(id_) == 11 ? nt.Electron_dxy()[idx_] : nt.Muon_dxy()[idx_]);
+            dz_ = (abs(id_) == 11 ? nt.Electron_dz()[idx_] : nt.Muon_dz()[idx_]);
             if (!isData_){
                 genPartFlav_ = (abs(id_) == 11 ? nt.Electron_genPartFlav()[idx_] : nt.Muon_genPartFlav()[idx_]);
                 int mcidx = (abs(id_) == 11 ? nt.Electron_genPartIdx()[idx_] : nt.Muon_genPartIdx()[idx_]);
@@ -38,6 +40,8 @@ struct Lepton {
     float eta() { return eta_; }
     float phi() { return phi_; }
     float miniIso() { return miniIso_;}
+    float dxy() { return dxy_;}
+    float dz() { return dz_;}
     bool is_loose() {return (idlevel_==SS::IDLevel::IDfakable || idlevel_==SS::IDLevel::IDtight);}
     bool is_tight() {return (idlevel_==SS::IDLevel::IDtight);}
     bool operator==(const Lepton& other) {return ((this->id_ == other.id()) && (this->idx_==other.idx()));}
@@ -56,6 +60,8 @@ struct Lepton {
     float mass_ = 0.;
     LorentzVector p4_;
     float miniIso_ = -1.;
+    float dxy_ = -1.;
+    float dz_ = -1.;
     unsigned int idx_;
     int idlevel_ = SS::IDdefault;
     bool isData_;
