@@ -2,6 +2,7 @@
 #define SSSELECTIONS_H
 #include "Nano.h"
 #include "Base.h"
+#include "IsolationTools.h"
 
 SS::IDLevel whichLeptonLevel(int id, int idx);
 bool isLeptonLevel(SS::IDLevel idlevel, int id, int idx);
@@ -24,6 +25,28 @@ struct Lepton {
                 mcid_ = nt.GenPart_pdgId()[mcidx];
             }
             idlevel_ = whichLeptonLevel(id_, idx_);
+            if (nt.year() == 2016){
+                if(abs(id_)==11){
+                    ptrel_cut = 7.2;
+                    miniIso_cut = 0.12;
+                    ptRatio_cut = 0.80;
+                }else if(abs(id_)==13){
+                    ptrel_cut = 7.2;
+                    miniIso_cut = 0.12;
+                    ptRatio_cut = 0.76;
+                }
+            }else{
+                if(abs(id_)==11){
+                    ptrel_cut = 8.0;
+                    miniIso_cut = 0.07;
+                    ptRatio_cut = 0.78;
+                }else if(abs(id_)==13){
+                    ptrel_cut = 6.8;
+                    miniIso_cut = 0.11;
+                    ptRatio_cut = 0.74;
+                }
+            }
+            coneCorrPt_ = coneCorrPt(id_, idx_, miniIso_cut, ptRatio_cut, ptrel_cut);
 
         }
     }
@@ -36,6 +59,7 @@ struct Lepton {
     int charge() { return -1 * id_ / abs(id_); }
     int idlevel() { return idlevel_; }
     LorentzVector p4() { return p4_; }
+    float conecorrpt() { return coneCorrPt_; }
     float pt() { return pt_; }
     float eta() { return eta_; }
     float phi() { return phi_; }
@@ -65,6 +89,11 @@ struct Lepton {
     unsigned int idx_;
     int idlevel_ = SS::IDdefault;
     bool isData_;
+    float ptrel_cut = 0;
+    float miniIso_cut = 0;
+    float ptRatio_cut = 0;
+    float coneCorrPt_ = 0;
+                
 };
 
 typedef std::pair<Lepton, Lepton> Hyp;
@@ -94,8 +123,13 @@ std::pair<int,int> get_n_mu_el(Leptons &leps);
 
 struct Jet {
     Jet(unsigned int idxx = 0) : idx_(idxx) {
+        isData_ = nt.isData();
         id_ = nt.Jet_jetId()[idx_];
         pt_ = nt.Jet_pt()[idx_];
+        if(!isData_){
+            pt_jesup_ = nt.Jet_pt_jesTotalUp()[idx_];
+            pt_jesdown_ = nt.Jet_pt_jesTotalDown()[idx_];
+        }
         eta_ = nt.Jet_eta()[idx_];
         phi_ = nt.Jet_phi()[idx_];
         p4_ = nt.Jet_p4()[idx_];
@@ -105,6 +139,8 @@ struct Jet {
     unsigned int idx() const { return idx_; }
     LorentzVector p4() { return p4_; }
     float pt() { return pt_; }
+    float pt_jesup() { if(!isData_) {return pt_jesup_;} else {return -1;} }
+    float pt_jesdown() { if(!isData_) {return pt_jesdown_;} else {return -1;} }
     float eta() { return eta_; }
     float phi() { return phi_; }
     float bdisc() {return nt.Jet_btagDeepFlavB()[idx_];}
@@ -122,10 +158,13 @@ struct Jet {
   private:
     int id_;
     float pt_ = 0.;
+    float pt_jesup_ = 0.;
+    float pt_jesdown_ = 0.;
     float eta_ = 0.;
     float phi_ = 0.;
     LorentzVector p4_;
     unsigned int idx_;
+    bool isData_;
 };
 typedef std::pair<Jet, Jet> DiJet;
 typedef std::vector<Jet> Jets;
@@ -136,8 +175,8 @@ std::vector<bool> cleanJets(Jets &jets, Leptons &leps);
 
 // get all good jets and bjets
 // applies kinematic (eta,pt) cuts, jet ID, and b-tagging
-std::pair<Jets, Jets> getJets(float min_jet_pt=40., float min_bjet_pt=25.);
-std::pair<Jets, Jets> getJets(Leptons &leps,float min_jet_pt=40., float min_bjet_pt=25.);
+std::pair<Jets, Jets> getJets(float min_jet_pt=40., float min_bjet_pt=25., int jesVar = 0);
+std::pair<Jets, Jets> getJets(Leptons &leps,float min_jet_pt=40., float min_bjet_pt=25., int jesVar = 0);
 
 //Sorting functions
 bool lepsort (Lepton i,Lepton j);

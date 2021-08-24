@@ -4437,6 +4437,14 @@ protected:
     vector<float> v_Jet_pt_;
     TBranch *b_Jet_pt_;
     bool loaded_Jet_pt_;
+    float Jet_pt_jesTotalUp_[NJET_MAX];
+    vector<float> v_Jet_pt_jesTotalUp_;
+    TBranch *b_Jet_pt_jesTotalUp_;
+    bool loaded_Jet_pt_jesTotalUp_;
+    float Jet_pt_jesTotalDown_[NJET_MAX];
+    vector<float> v_Jet_pt_jesTotalDown_;
+    TBranch *b_Jet_pt_jesTotalDown_;
+    bool loaded_Jet_pt_jesTotalDown_;
     int Jet_puId_[NJET_MAX];
     vector<int> v_Jet_puId_;
     TBranch *b_Jet_puId_;
@@ -6231,6 +6239,12 @@ protected:
     float MET_pt_;
     TBranch *b_MET_pt_;
     bool loaded_MET_pt_;
+    float MET_T1_pt_jesTotalUp_;
+    TBranch *b_MET_T1_pt_jesTotalUp_;
+    bool loaded_MET_T1_pt_jesTotalUp_;
+    float MET_T1_pt_jesTotalDown_;
+    TBranch *b_MET_T1_pt_jesTotalDown_;
+    bool loaded_MET_T1_pt_jesTotalDown_;
     float MET_significance_;
     TBranch *b_MET_significance_;
     bool loaded_MET_significance_;
@@ -6643,6 +6657,12 @@ protected:
     float puWeight_;
     TBranch *b_puWeight_;
     bool loaded_puWeight_;
+    float puWeightUp_;
+    TBranch *b_puWeightUp_;
+    bool loaded_puWeightUp_;
+    float puWeightDown_;
+    TBranch *b_puWeightDown_;
+    bool loaded_puWeightDown_;
     float PuppiMET_phi_;
     TBranch *b_PuppiMET_phi_;
     bool loaded_PuppiMET_phi_;
@@ -8606,6 +8626,8 @@ public:
     const vector<int> &Jet_partonFlavour();
     const vector<float> &Jet_phi();
     const vector<float> &Jet_pt();
+    const vector<float> &Jet_pt_jesTotalUp();
+    const vector<float> &Jet_pt_jesTotalDown();
     const vector<int> &Jet_puId();
     const vector<float> &Jet_puIdDisc();
     const vector<float> &Jet_qgl();
@@ -9199,6 +9221,8 @@ public:
     const float &MET_fiducialGenPt();
     const float &MET_phi();
     const float &MET_pt();
+    const float &MET_T1_pt_jesTotalUp();
+    const float &MET_T1_pt_jesTotalDown();
     const float &MET_significance();
     const float &MET_sumEt();
     const float &MET_sumPtUnclustered();
@@ -9307,6 +9331,8 @@ public:
     const int &Pileup_sumEOOT();
     const int &Pileup_sumLOOT();
     const float &puWeight();
+    const float &puWeightUp();
+    const float &puWeightDown();
     const float &PuppiMET_phi();
     const float &PuppiMET_phiJERUp();
     const float &PuppiMET_phiJESUp();
@@ -10861,6 +10887,8 @@ namespace tas {
     const vector<int> &Jet_partonFlavour(); // flavour from parton matching
     const vector<float> &Jet_phi(); // phi
     const vector<float> &Jet_pt(); // pt
+    const vector<float> &Jet_pt_jesTotalUp(); // pt jes up
+    const vector<float> &Jet_pt_jesTotalDown(); // pt jes down
     const vector<int> &Jet_puId(); // Pilup ID flags with 80X (2016) training
     const vector<float> &Jet_puIdDisc(); // Pilup ID discriminant with 102X (2018) training
     const vector<float> &Jet_qgl(); // Quark vs Gluon likelihood discriminator
@@ -11454,6 +11482,8 @@ namespace tas {
     const float &MET_fiducialGenPt(); // pt
     const float &MET_phi(); // phi
     const float &MET_pt(); // pt
+    const float &MET_T1_pt_jesTotalUp(); // pt
+    const float &MET_T1_pt_jesTotalDown(); // pt
     const float &MET_significance(); // MET significance
     const float &MET_sumEt(); // scalar sum of Et
     const float &MET_sumPtUnclustered(); // sumPt used for MET significance
@@ -11562,6 +11592,8 @@ namespace tas {
     const int &Pileup_sumEOOT(); // number of early out of time pileup
     const int &Pileup_sumLOOT();
     const float &puWeight();
+    const float &puWeightUp();
+    const float &puWeightDown();
     const float &PuppiMET_phi(); // phi
     const float &PuppiMET_phiJERUp(); // JER up phi
     const float &PuppiMET_phiJESUp(); // JES up phi

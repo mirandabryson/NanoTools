@@ -2756,6 +2756,10 @@ void Nano::Init(TTree *tree) {
     if (b_Jet_phi_) { b_Jet_phi_->SetAddress(&Jet_phi_); }
     b_Jet_pt_ = tree->GetBranch("Jet_pt");
     if (b_Jet_pt_) { b_Jet_pt_->SetAddress(&Jet_pt_); }
+    b_Jet_pt_jesTotalUp_ = tree->GetBranch("Jet_pt_jesTotalUp");
+    if (b_Jet_pt_jesTotalUp_) { b_Jet_pt_jesTotalUp_->SetAddress(&Jet_pt_jesTotalUp_); }
+    b_Jet_pt_jesTotalDown_ = tree->GetBranch("Jet_pt_jesTotalDown");
+    if (b_Jet_pt_jesTotalDown_) { b_Jet_pt_jesTotalDown_->SetAddress(&Jet_pt_jesTotalDown_); }
     b_Jet_puId_ = tree->GetBranch("Jet_puId");
     if (b_Jet_puId_) { b_Jet_puId_->SetAddress(&Jet_puId_); }
     b_Jet_puIdDisc_ = tree->GetBranch("Jet_puIdDisc");
@@ -3940,6 +3944,10 @@ void Nano::Init(TTree *tree) {
     if (b_MET_phi_) { b_MET_phi_->SetAddress(&MET_phi_); }
     b_MET_pt_ = tree->GetBranch("MET_pt");
     if (b_MET_pt_) { b_MET_pt_->SetAddress(&MET_pt_); }
+    b_MET_T1_pt_jesTotalUp_ = tree->GetBranch("MET_T1_pt_jesTotalUp");
+    if (b_MET_T1_pt_jesTotalUp_) { b_MET_T1_pt_jesTotalUp_->SetAddress(&MET_T1_pt_jesTotalUp_); }
+    b_MET_T1_pt_jesTotalDown_ = tree->GetBranch("MET_T1_pt_jesTotalDown");
+    if (b_MET_T1_pt_jesTotalDown_) { b_MET_T1_pt_jesTotalDown_->SetAddress(&MET_T1_pt_jesTotalDown_); }
     b_MET_significance_ = tree->GetBranch("MET_significance");
     if (b_MET_significance_) { b_MET_significance_->SetAddress(&MET_significance_); }
     b_MET_sumEt_ = tree->GetBranch("MET_sumEt");
@@ -4152,6 +4160,10 @@ void Nano::Init(TTree *tree) {
     if (b_Pileup_sumLOOT_) { b_Pileup_sumLOOT_->SetAddress(&Pileup_sumLOOT_); }
     b_puWeight_ = tree->GetBranch("puWeight");
     if (b_puWeight_) { b_puWeight_->SetAddress(&puWeight_); }
+    b_puWeightUp_ = tree->GetBranch("puWeightUp");
+    if (b_puWeightUp_) { b_puWeightUp_->SetAddress(&puWeightUp_); }
+    b_puWeightDown_ = tree->GetBranch("puWeightDown");
+    if (b_puWeightDown_) { b_puWeightDown_->SetAddress(&puWeightDown_); }
     b_PuppiMET_phi_ = tree->GetBranch("PuppiMET_phi");
     if (b_PuppiMET_phi_) { b_PuppiMET_phi_->SetAddress(&PuppiMET_phi_); }
     b_PuppiMET_phiJERUp_ = tree->GetBranch("PuppiMET_phiJERUp");
@@ -5882,6 +5894,8 @@ void Nano::GetEntry(unsigned int idx) {
     loaded_Jet_partonFlavour_ = false;
     loaded_Jet_phi_ = false;
     loaded_Jet_pt_ = false;
+    loaded_Jet_pt_jesTotalUp_ = false;
+    loaded_Jet_pt_jesTotalDown_ = false;
     loaded_Jet_puId_ = false;
     loaded_Jet_puIdDisc_ = false;
     loaded_Jet_qgl_ = false;
@@ -6475,6 +6489,8 @@ void Nano::GetEntry(unsigned int idx) {
     loaded_MET_fiducialGenPt_ = false;
     loaded_MET_phi_ = false;
     loaded_MET_pt_ = false;
+    loaded_MET_T1_pt_jesTotalUp_ = false;
+    loaded_MET_T1_pt_jesTotalDown_ = false;
     loaded_MET_significance_ = false;
     loaded_MET_sumEt_ = false;
     loaded_MET_sumPtUnclustered_ = false;
@@ -6583,6 +6599,8 @@ void Nano::GetEntry(unsigned int idx) {
     loaded_Pileup_sumEOOT_ = false;
     loaded_Pileup_sumLOOT_ = false;
     loaded_puWeight_ = false;
+    loaded_puWeightUp_ = false;
+    loaded_puWeightDown_ = false;
     loaded_PuppiMET_phi_ = false;
     loaded_PuppiMET_phiJERUp_ = false;
     loaded_PuppiMET_phiJESUp_ = false;
@@ -18107,6 +18125,24 @@ const vector<float> &Nano::Jet_pt() {
     }
     return v_Jet_pt_;
 }
+const vector<float> &Nano::Jet_pt_jesTotalUp() {
+    if (!loaded_Jet_pt_jesTotalUp_) {
+        if (!b_Jet_pt_jesTotalUp_) throw std::runtime_error("Jet_pt_jesTotalUp branch doesn't exist");
+        int bytes = b_Jet_pt_jesTotalUp_->GetEntry(index);
+        v_Jet_pt_jesTotalUp_ = vector<float>(Jet_pt_jesTotalUp_,Jet_pt_jesTotalUp_+bytes/sizeof(Jet_pt_jesTotalUp_[0]));
+        loaded_Jet_pt_jesTotalUp_ = true;
+    }
+    return v_Jet_pt_jesTotalUp_;
+}
+const vector<float> &Nano::Jet_pt_jesTotalDown() {
+    if (!loaded_Jet_pt_jesTotalDown_) {
+        if (!b_Jet_pt_jesTotalDown_) throw std::runtime_error("Jet_pt_jesTotalDown branch doesn't exist");
+        int bytes = b_Jet_pt_jesTotalDown_->GetEntry(index);
+        v_Jet_pt_jesTotalDown_ = vector<float>(Jet_pt_jesTotalDown_,Jet_pt_jesTotalDown_+bytes/sizeof(Jet_pt_jesTotalDown_[0]));
+        loaded_Jet_pt_jesTotalDown_ = true;
+    }
+    return v_Jet_pt_jesTotalDown_;
+}
 const vector<int> &Nano::Jet_puId() {
     if (!loaded_Jet_puId_) {
         if (!b_Jet_puId_) throw std::runtime_error("Jet_puId branch doesn't exist");
@@ -22872,6 +22908,22 @@ const float &Nano::MET_pt() {
     }
     return MET_pt_;
 }
+const float &Nano::MET_T1_pt_jesTotalUp() {
+    if (!loaded_MET_T1_pt_jesTotalUp_) {
+        if (!b_MET_T1_pt_jesTotalUp_) throw std::runtime_error("MET_T1_pt_jesTotalUp branch doesn't exist");
+        b_MET_T1_pt_jesTotalUp_->GetEntry(index);
+        loaded_MET_T1_pt_jesTotalUp_ = true;
+    }
+    return MET_T1_pt_jesTotalUp_;
+}
+const float &Nano::MET_T1_pt_jesTotalDown() {
+    if (!loaded_MET_T1_pt_jesTotalDown_) {
+        if (!b_MET_T1_pt_jesTotalDown_) throw std::runtime_error("MET_T1_pt_jesTotalDown branch doesn't exist");
+        b_MET_T1_pt_jesTotalDown_->GetEntry(index);
+        loaded_MET_T1_pt_jesTotalDown_ = true;
+    }
+    return MET_T1_pt_jesTotalDown_;
+}
 const float &Nano::MET_significance() {
     if (!loaded_MET_significance_) {
         if (!b_MET_significance_) throw std::runtime_error("MET_significance branch doesn't exist");
@@ -23835,6 +23887,22 @@ const float &Nano::puWeight() {
         loaded_puWeight_ = true;
     }
     return puWeight_;
+}
+const float &Nano::puWeightUp() {
+    if (!loaded_puWeightUp_) {
+        if (!b_puWeightUp_) throw std::runtime_error("puWeightUp branch doesn't exist");
+        b_puWeightUp_->GetEntry(index);
+        loaded_puWeightUp_ = true;
+    }
+    return puWeightUp_;
+}
+const float &Nano::puWeightDown() {
+    if (!loaded_puWeightDown_) {
+        if (!b_puWeightDown_) throw std::runtime_error("puWeightDown branch doesn't exist");
+        b_puWeightDown_->GetEntry(index);
+        loaded_puWeightDown_ = true;
+    }
+    return puWeightDown_;
 }
 const float &Nano::PuppiMET_phi() {
     if (!loaded_PuppiMET_phi_) {
@@ -26613,6 +26681,8 @@ namespace tas {
     const vector<int> &Jet_partonFlavour() { return nt.Jet_partonFlavour(); }
     const vector<float> &Jet_phi() { return nt.Jet_phi(); }
     const vector<float> &Jet_pt() { return nt.Jet_pt(); }
+    const vector<float> &Jet_pt_jesTotalUp() { return nt.Jet_pt_jesTotalUp(); }
+    const vector<float> &Jet_pt_jesTotalDown() { return nt.Jet_pt_jesTotalDown(); }
     const vector<int> &Jet_puId() { return nt.Jet_puId(); }
     const vector<float> &Jet_puIdDisc() { return nt.Jet_puIdDisc(); }
     const vector<float> &Jet_qgl() { return nt.Jet_qgl(); }
@@ -27206,6 +27276,8 @@ namespace tas {
     const float &MET_fiducialGenPt() { return nt.MET_fiducialGenPt(); }
     const float &MET_phi() { return nt.MET_phi(); }
     const float &MET_pt() { return nt.MET_pt(); }
+    const float &MET_T1_pt_jesTotalUp() { return nt.MET_T1_pt_jesTotalUp(); }
+    const float &MET_T1_pt_jesTotalDown() { return nt.MET_T1_pt_jesTotalDown(); }
     const float &MET_significance() { return nt.MET_significance(); }
     const float &MET_sumEt() { return nt.MET_sumEt(); }
     const float &MET_sumPtUnclustered() { return nt.MET_sumPtUnclustered(); }
@@ -27314,6 +27386,8 @@ namespace tas {
     const int &Pileup_sumEOOT() { return nt.Pileup_sumEOOT(); }
     const int &Pileup_sumLOOT() { return nt.Pileup_sumLOOT(); }
     const float &puWeight() { return nt.puWeight(); }
+    const float &puWeightUp() { return nt.puWeightUp(); }
+    const float &puWeightDown() { return nt.puWeightDown(); }
     const float &PuppiMET_phi() { return nt.PuppiMET_phi(); }
     const float &PuppiMET_phiJERUp() { return nt.PuppiMET_phiJERUp(); }
     const float &PuppiMET_phiJESUp() { return nt.PuppiMET_phiJESUp(); }
@@ -27620,6 +27694,8 @@ namespace tas {
         else if (name == "Jet_neHEF") return nt.Jet_neHEF();
         else if (name == "Jet_phi") return nt.Jet_phi();
         else if (name == "Jet_pt") return nt.Jet_pt();
+        else if (name == "Jet_pt_jesTotalUp") return nt.Jet_pt_jesTotalUp();
+        else if (name == "Jet_pt_jesTotalDown") return nt.Jet_pt_jesTotalDown();
         else if (name == "Jet_puIdDisc") return nt.Jet_puIdDisc();
         else if (name == "Jet_qgl") return nt.Jet_qgl();
         else if (name == "Jet_rawFactor") return nt.Jet_rawFactor();
@@ -27759,6 +27835,8 @@ namespace tas {
         else if (name == "Pileup_sumEOOT") return nt.Pileup_sumEOOT();
         else if (name == "Pileup_sumLOOT") return nt.Pileup_sumLOOT();
         else if (name == "puWeight") return nt.puWeight();
+        else if (name == "puWeightUp") return nt.puWeightUp();
+        else if (name == "puWeightDown") return nt.puWeightDown();
         else if (name == "SoftActivityJetNjets10") return nt.SoftActivityJetNjets10();
         else if (name == "SoftActivityJetNjets2") return nt.SoftActivityJetNjets2();
         else if (name == "SoftActivityJetNjets5") return nt.SoftActivityJetNjets5();
@@ -27799,6 +27877,8 @@ namespace tas {
         else if (name == "MET_fiducialGenPt") return nt.MET_fiducialGenPt();
         else if (name == "MET_phi") return nt.MET_phi();
         else if (name == "MET_pt") return nt.MET_pt();
+        else if (name == "MET_T1_pt_jesTotalUp") return nt.MET_T1_pt_jesTotalUp();
+        else if (name == "MET_T1_pt_jesTotalDown") return nt.MET_T1_pt_jesTotalDown();
         else if (name == "MET_significance") return nt.MET_significance();
         else if (name == "MET_sumEt") return nt.MET_sumEt();
         else if (name == "MET_sumPtUnclustered") return nt.MET_sumPtUnclustered();
