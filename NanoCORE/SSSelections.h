@@ -113,6 +113,10 @@ template <typename T1, typename T2> std::ostream &operator<<(std::ostream &os, s
 vector<Lepton> getLeptons();
 Leptons getTightLeptons();
 Leptons getLooseLeptons();
+
+Leptons getTightLeptons_ttHid();
+Leptons getLooseLeptons_ttHid();
+
 std::tuple<int, int, float> getJetInfo(vector<Lepton> &leps, int variation = 0);
 std::tuple<int, int, float> getCleanJetInfo(vector<Lepton> &leps, int variation = 0);
 std::pair<int, int> makesResonance(Leptons &leps, Lepton lep1, Lepton lep2, float mass, float window);
@@ -183,5 +187,7 @@ bool lepsort (Lepton i,Lepton j);
 bool jetptsort (Jet i,Jet j);
 
 bool pass_lep_pt_eta(Lepton &lep);
+bool passesTightTTHid(Lepton &lep);
+bool passesFakableTTHid(Lepton &lep);
 
 #endif

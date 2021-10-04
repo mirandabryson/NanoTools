@@ -46,6 +46,7 @@ bool SS::muon2016ID(unsigned int idx, SS::IDLevel id_level) {
         break;
     case (SS::IDtight):
         if (!passesLeptonIso(idx, 13, 0.16, 0.76, 7.2)) { return false; }
+        // if (!passesPFLeptonIso(idx, 13, 0.16, 0.4)) { return false; }
         return true;
         break;
     default:
@@ -67,6 +68,7 @@ bool SS::muon2017ID(unsigned int idx, SS::IDLevel id_level) {
         break;
     case (SS::IDtight):
         if (!passesLeptonIso(idx, 13, 0.11, 0.74, 6.8)) { return false; }
+        // if (!passesPFLeptonIso(idx, 13, 0.11, 0.4)) { return false; }
         return true;
         break;
     default:
@@ -90,6 +92,7 @@ bool SS::muon2018ID(unsigned int idx, SS::IDLevel id_level) {
     case (SS::IDtight):
         // Same as 2017 ID
         if (!passesLeptonIso(idx, 13, 0.11, 0.74, 6.8)) { return false; }
+        // if (!passesPFLeptonIso(idx, 13, 0.11, 0.4)) { return false; }
         return true;
         break;
     default:

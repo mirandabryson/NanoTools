@@ -41,6 +41,23 @@ bool passesLeptonIso(unsigned int idx, int id, double mini_iso_cut, double pt_ra
     return (pass_mini_iso_cut && (pass_pt_ratio_cut || pass_pt_rel_cut));
 }
 
+bool passesPFLeptonIso(unsigned int idx, int id, double mini_iso_cut, double pf_iso_cut) {
+    double mini_iso;
+    double pf_iso;
+    if (abs(id) == 11) {
+        mini_iso = Electron_miniPFRelIso_all().at(idx);
+        pf_iso = Electron_pfRelIso03_all().at(idx);
+    } else if (abs(id) == 13) {
+        mini_iso = Muon_miniPFRelIso_all().at(idx);
+        pf_iso = Muon_pfRelIso03_all().at(idx);
+    } else {
+        return false;
+    }
+    bool pass_mini_iso_cut = mini_iso < mini_iso_cut;
+    bool pass_pf_iso_cut = pf_iso < pf_iso_cut;
+    return (pass_mini_iso_cut && pass_pf_iso_cut);
+}
+
 float coneCorrPt(int id, int idx, float multiiso_minireliso, float multiiso_ptratio, float multiiso_ptrel) {
     // Isolation variables
     float miniiso = abs(id) == 11 ? Electron_miniPFRelIso_all().at(idx) : Muon_miniPFRelIso_all().at(idx);

@@ -3944,6 +3944,10 @@ void Nano::Init(TTree *tree) {
     if (b_MET_phi_) { b_MET_phi_->SetAddress(&MET_phi_); }
     b_MET_pt_ = tree->GetBranch("MET_pt");
     if (b_MET_pt_) { b_MET_pt_->SetAddress(&MET_pt_); }
+    b_MET_T1_pt_ = tree->GetBranch("MET_T1_pt");
+    if (b_MET_T1_pt_) { b_MET_T1_pt_->SetAddress(&MET_T1_pt_); }
+    b_METFixEE2017_T1_pt_ = tree->GetBranch("METFixEE2017_T1_pt");
+    if (b_METFixEE2017_T1_pt_) { b_METFixEE2017_T1_pt_->SetAddress(&METFixEE2017_T1_pt_); }
     b_MET_T1_pt_jesTotalUp_ = tree->GetBranch("MET_T1_pt_jesTotalUp");
     if (b_MET_T1_pt_jesTotalUp_) { b_MET_T1_pt_jesTotalUp_->SetAddress(&MET_T1_pt_jesTotalUp_); }
     b_MET_T1_pt_jesTotalDown_ = tree->GetBranch("MET_T1_pt_jesTotalDown");
@@ -6489,6 +6493,8 @@ void Nano::GetEntry(unsigned int idx) {
     loaded_MET_fiducialGenPt_ = false;
     loaded_MET_phi_ = false;
     loaded_MET_pt_ = false;
+    loaded_MET_T1_pt_ = false;
+    loaded_METFixEE2017_T1_pt_ = false;
     loaded_MET_T1_pt_jesTotalUp_ = false;
     loaded_MET_T1_pt_jesTotalDown_ = false;
     loaded_MET_significance_ = false;
@@ -18087,12 +18093,14 @@ const vector<float> &Nano::Jet_neHEF() {
 const vector<LorentzVector> &Nano::Jet_p4() {
     if (!loaded_Jet_p4_) {
         v_Jet_p4_.clear();
+        vector<float> masses;
         vector<float> pts = Nano::Jet_pt();
         vector<float> etas = Nano::Jet_eta();
         vector<float> phis = Nano::Jet_phi();
-        vector<float> masses = Nano::Jet_mass();
+        if(loaded_Jet_mass_){masses = Nano::Jet_mass();}
         for (unsigned int i=0; i < pts.size(); i++) {
-            v_Jet_p4_.push_back(LorentzVector(pts[i],etas[i],phis[i],masses[i]));
+            if(loaded_Jet_mass_){v_Jet_p4_.push_back(LorentzVector(pts[i],etas[i],phis[i],masses[i]));}
+            else{v_Jet_p4_.push_back(LorentzVector(pts[i],etas[i],phis[i],0.0));}
         }
         loaded_Jet_p4_ = true;
     }
@@ -22908,6 +22916,22 @@ const float &Nano::MET_pt() {
     }
     return MET_pt_;
 }
+const float &Nano::MET_T1_pt() {
+    if (!loaded_MET_T1_pt_) {
+        if (!b_MET_T1_pt_) throw std::runtime_error("MET_T1_pt branch doesn't exist");
+        b_MET_T1_pt_->GetEntry(index);
+        loaded_MET_T1_pt_ = true;
+    }
+    return MET_T1_pt_;
+}
+const float &Nano::METFixEE2017_T1_pt() {
+    if (!loaded_METFixEE2017_T1_pt_) {
+        if (!b_METFixEE2017_T1_pt_) throw std::runtime_error("METFixEE2017_T1_pt branch doesn't exist");
+        b_METFixEE2017_T1_pt_->GetEntry(index);
+        loaded_METFixEE2017_T1_pt_ = true;
+    }
+    return METFixEE2017_T1_pt_;
+}
 const float &Nano::MET_T1_pt_jesTotalUp() {
     if (!loaded_MET_T1_pt_jesTotalUp_) {
         if (!b_MET_T1_pt_jesTotalUp_) throw std::runtime_error("MET_T1_pt_jesTotalUp branch doesn't exist");
@@ -27276,6 +27300,8 @@ namespace tas {
     const float &MET_fiducialGenPt() { return nt.MET_fiducialGenPt(); }
     const float &MET_phi() { return nt.MET_phi(); }
     const float &MET_pt() { return nt.MET_pt(); }
+    const float &MET_T1_pt() { return nt.MET_T1_pt(); }
+    const float &METFixEE2017_T1_pt() { return nt.METFixEE2017_T1_pt(); }
     const float &MET_T1_pt_jesTotalUp() { return nt.MET_T1_pt_jesTotalUp(); }
     const float &MET_T1_pt_jesTotalDown() { return nt.MET_T1_pt_jesTotalDown(); }
     const float &MET_significance() { return nt.MET_significance(); }
@@ -27877,6 +27903,8 @@ namespace tas {
         else if (name == "MET_fiducialGenPt") return nt.MET_fiducialGenPt();
         else if (name == "MET_phi") return nt.MET_phi();
         else if (name == "MET_pt") return nt.MET_pt();
+        else if (name == "MET_T1_pt") return nt.MET_T1_pt();
+        else if (name == "METFixEE2017_T1_pt") return nt.METFixEE2017_T1_pt();
         else if (name == "MET_T1_pt_jesTotalUp") return nt.MET_T1_pt_jesTotalUp();
         else if (name == "MET_T1_pt_jesTotalDown") return nt.MET_T1_pt_jesTotalDown();
         else if (name == "MET_significance") return nt.MET_significance();

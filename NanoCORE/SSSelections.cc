@@ -718,3 +718,135 @@ Leptons getLooseLeptons() {
     return loose_leps;
 
 }
+
+bool passesTightTTHid(Lepton &lepton){
+    if(std::fabs(lepton.dxy())>=0.05) return false;
+    if(std::fabs(lepton.dz())>=0.1) return false;
+    if(lepton.miniIso()>(0.4*lepton.pt())) return false;
+
+    if(lepton.absid()==13){
+        int lepidx = lepton.idx();
+        int jetidx = nt.Muon_jetIdx()[lepidx];
+        float bscore =0.0;
+        if(nt.year()==2016) bscore = 0.3093;
+        else if(nt.year()==2017) bscore = 0.3033;
+        else if(nt.year()==2018) bscore = 0.2770;
+        if(std::fabs(lepton.eta())>2.4) return false;
+        if(nt.Muon_sip3d()[lepidx]>=8) return false;
+        if(nt.Muon_mediumId()[lepidx]!=1) return false;
+        if(nt.Jet_btagDeepFlavB()[jetidx]>bscore) return false;
+        if(nt.Muon_mvaTTH()[lepidx]<0.85) return false;
+    }else if(lepton.absid()==11){
+        int lepidx = lepton.idx();
+        int jetidx = nt.Electron_jetIdx()[lepidx];
+        SS::ElectronMVAIDLevel level = SS::fakableNoIsoLooseMVA2016;
+        float bscore =0.0;
+        if(nt.year()==2016) bscore = 0.3093;
+        else if(nt.year()==2017) {
+            bscore = 0.3033;
+            level = SS::fakableNoIsoLooseMVA2017;
+        }
+        else if(nt.year()==2018) {
+            bscore = 0.2770;
+            level = SS::fakableNoIsoLooseMVA2018;
+        }
+        if(std::fabs(lepton.eta())>2.5) return false;
+        if(nt.Electron_sip3d()[lepidx]>=8) return false;
+        if(!((std::fabs(lepton.eta())<1.479 && nt.Electron_sieie()[lepidx]<0.011)||(std::fabs(lepton.eta())>1.479 && nt.Electron_sieie()[lepidx]<0.030) ) )return false;
+        if(nt.Electron_hoe()[lepidx]>0.1) return false;
+        if(nt.Electron_eInvMinusPInv()[lepidx]<-0.04) return false;
+        if(nt.Electron_convVeto()[lepidx]!=1) return false;
+        if(nt.Electron_lostHits()[lepidx]!=0) return false;
+        if(!passesElectronMVA(lepidx, level, nt.year())) return false;
+        if(nt.Jet_btagDeepFlavB()[jetidx]>bscore) return false;
+        if(nt.Electron_mvaTTH()[lepidx]<0.8) return false;
+    }
+    return true;
+}
+
+bool passesFakableTTHid(Lepton &lepton){
+    if(std::fabs(lepton.dxy())>=0.05) return false;
+    if(std::fabs(lepton.dz())>=0.1) return false;
+    if(lepton.miniIso()>(0.4*lepton.pt())) return false;
+
+    if(lepton.absid()==13){
+        int lepidx = lepton.idx();
+        int jetidx = nt.Muon_jetIdx()[lepidx];
+        float bscore =0.0;
+        if(nt.year()==2016) bscore = 0.3093;
+        else if(nt.year()==2017) bscore = 0.3033;
+        else if(nt.year()==2018) bscore = 0.2770;
+        if(std::fabs(lepton.eta())>2.4) return false;
+        if(nt.Muon_sip3d()[lepidx]>=8) return false;
+        if(nt.Muon_looseId()[lepidx]!=1) return false;
+        if(nt.Muon_mvaTTH()[lepidx]>0.85){
+            if(nt.Jet_btagDeepFlavB()[jetidx]>bscore) return false;
+        }else{
+            if(Muon_jetRelIso()[lepidx]>0.5) return false;
+            if(nt.Jet_btagDeepFlavB()[jetidx]>bscore) return false;
+        }
+    }else if(lepton.absid()==11){
+        int lepidx = lepton.idx();
+        int jetidx = nt.Electron_jetIdx()[lepidx];
+        SS::ElectronMVAIDLevel level = SS::fakableNoIsoLooseMVA2016;
+        float bscore =0.0;
+        if(nt.year()==2016) bscore = 0.3093;
+        else if(nt.year()==2017) {
+            bscore = 0.3033;
+            level = SS::fakableNoIsoLooseMVA2017;
+        }
+        else if(nt.year()==2018) {
+            bscore = 0.2770;
+            level = SS::fakableNoIsoLooseMVA2018;
+        }
+        if(std::fabs(lepton.eta())>2.5) return false;
+        if(nt.Electron_sip3d()[lepidx]>=8) return false;
+        if(!((std::fabs(lepton.eta())<1.479 && nt.Electron_sieie()[lepidx]<0.011)||(std::fabs(lepton.eta())>1.479 && nt.Electron_sieie()[lepidx]<0.030) ) )return false;
+        if(nt.Electron_hoe()[lepidx]>0.1) return false;
+        if(nt.Electron_eInvMinusPInv()[lepidx]<-0.04) return false;
+        if(nt.Electron_convVeto()[lepidx]!=1) return false;
+        if(nt.Electron_lostHits()[lepidx]!=0) return false;
+        if(nt.Jet_btagDeepFlavB()[jetidx]>bscore) return false;
+        if(nt.Electron_mvaTTH()[lepidx]>0.8){
+            if(!passesElectronMVA(lepidx, level, nt.year())) return false;
+        }else{
+            if(nt.Electron_jetRelIso()[lepidx]>0.7) return false;
+            if(!passesElectronMVA(lepidx, level, nt.year())) return false;
+        }
+        if(nt.Electron_mvaTTH()[lepidx]<0.8) return false;
+    }
+    return true;
+}
+
+Leptons getTightLeptons_ttHid(){
+    Leptons leps = getLeptons();
+    sort(leps.begin(),leps.end(),lepsort); // sort leptons by pt 
+    Leptons tight_leps;
+    // int leptonCounter_ = -1;
+    for (auto lep : leps) {
+        if(!passesTightTTHid(lep)) continue;
+        // leptonCounter_++;
+        float min_lep_pt = 20.;
+        // float min_lep_pt = lep.is_mu() ? 20. : 25.;
+        // float min_lep_pt = (leptonCounter_==0) ? 25. : 20.;
+        if (lep.pt() < min_lep_pt) continue;
+        tight_leps.push_back(lep);
+    }
+    return tight_leps;
+}
+Leptons getLooseLeptons_ttHid() {
+    Leptons leps = getLeptons();
+    sort(leps.begin(),leps.end(),lepsort); // sort leptons by pt 
+    Leptons loose_leps;
+    // int leptonCounter_ = -1;
+    for (auto lep : leps) {
+        if (!passesFakableTTHid(lep)) continue;
+        float min_lep_pt = 20.;
+        // float min_lep_pt = lep.is_mu() ? 20. : 25.;
+        // float min_lep_pt = (leptonCounter_==0) ? 25. : 20.;
+        if (lep.pt() < min_lep_pt) continue;
+        loose_leps.push_back(lep);
+    }
+    return loose_leps;
+
+}

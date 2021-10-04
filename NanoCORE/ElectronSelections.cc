@@ -15,7 +15,7 @@ bool SS::electronID(int idx, SS::IDLevel id_level, int year) {
     if (Electron_miniPFRelIso_all().at(idx) >= 0.4) { return false; }
     if (id_level > SS::IDveto) {
         // Common (across years) fakable(loose) and tight checks
-        if (Electron_pt().at(idx) < 25.) { return false; }
+        if (Electron_pt().at(idx) < 20.) { return false; }
         if (Electron_tightCharge().at(idx) != 2) { return false; }
         if (fabs(Electron_sip3d().at(idx)) >= 4) { return false; }
         if (int(Electron_lostHits().at(idx)) > 0) { return false; }
@@ -55,6 +55,7 @@ bool SS::electron2016ID(int idx, SS::IDLevel id_level) {
         if (!passesElectronMVA(idx, SS::fakableNoIso2016, 2016)) { return false; }
         if (!passesElectronMVA(idx, SS::mediumNoIso2016, 2016)) { return false; }
         if (!passesLeptonIso(idx, 11, 0.12, 0.80, 7.2)) { return false; }
+        // if (!passesPFLeptonIso(idx, 11, 0.12, 0.4)) { return false; }
         return true;
         break;
     default:
@@ -80,6 +81,7 @@ bool SS::electron2017ID(int idx, SS::IDLevel id_level) {
     case (SS::IDtight):
         if (!passesElectronMVA(idx, SS::medium2017, 2017)) { return false; }
         if (!passesLeptonIso(idx, 11, 0.07, 0.78, 8.0)) { return false; }
+        // if (!passesPFLeptonIso(idx, 11, 0.07, 0.4)) { return false; }
         return true;
         break;
     default:
@@ -105,6 +107,7 @@ bool SS::electron2018ID(int idx, SS::IDLevel id_level) {
     case (SS::IDtight):
         if (!passesElectronMVA(idx, SS::medium2018, 2018)) { return false; }
         if (!passesLeptonIso(idx, 11, 0.07, 0.78, 8.0)) { return false; }
+        // if (!passesPFLeptonIso(idx, 11, 0.07, 0.4)) { return false; }
         return true;
         break;
     default:

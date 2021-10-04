@@ -26,7 +26,7 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> > LorentzVector
 
 #define NSV_MAX 39 // for SV_* collection
 #define NSOFTACTIVITYJET_MAX 21 // for SoftActivityJet_* collection
-#define NLHESCALEWEIGHT_MAX 3 // for LHEScaleWeight_* collection
+#define NLHESCALEWEIGHT_MAX 200 // for LHEScaleWeight_* collection
 #define NCORRT1METJET_MAX 102 // for CorrT1METJet_* collection
 #define NMUON_MAX 30 // for Muon_* collection
 #define NGENJET_MAX 60 // for GenJet_* collection
@@ -34,7 +34,7 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> > LorentzVector
 #define NLHEPART_MAX 24 // for LHEPart_* collection
 #define NTAU_MAX 18 // for Tau_* collection
 #define NISOTRACK_MAX 21 // for IsoTrack_* collection
-#define NLHEPDFWEIGHT_MAX 3 // for LHEPdfWeight_* collection
+#define NLHEPDFWEIGHT_MAX 200 // for LHEPdfWeight_* collection
 #define NFSRPHOTON_MAX 9 // for FsrPhoton_* collection
 #define NOTHERPV_MAX 12 // for OtherPV_* collection
 #define NTRIGOBJ_MAX 108 // for TrigObj_* collection
@@ -6239,6 +6239,12 @@ protected:
     float MET_pt_;
     TBranch *b_MET_pt_;
     bool loaded_MET_pt_;
+    float MET_T1_pt_;
+    TBranch *b_MET_T1_pt_;
+    bool loaded_MET_T1_pt_;
+    float METFixEE2017_T1_pt_;
+    TBranch *b_METFixEE2017_T1_pt_;
+    bool loaded_METFixEE2017_T1_pt_;
     float MET_T1_pt_jesTotalUp_;
     TBranch *b_MET_T1_pt_jesTotalUp_;
     bool loaded_MET_T1_pt_jesTotalUp_;
@@ -9221,6 +9227,8 @@ public:
     const float &MET_fiducialGenPt();
     const float &MET_phi();
     const float &MET_pt();
+    const float &MET_T1_pt();
+    const float &METFixEE2017_T1_pt();
     const float &MET_T1_pt_jesTotalUp();
     const float &MET_T1_pt_jesTotalDown();
     const float &MET_significance();
@@ -11482,6 +11490,8 @@ namespace tas {
     const float &MET_fiducialGenPt(); // pt
     const float &MET_phi(); // phi
     const float &MET_pt(); // pt
+    const float &MET_T1_pt(); // pt
+    const float &METFixEE2017_T1_pt(); // pt
     const float &MET_T1_pt_jesTotalUp(); // pt
     const float &MET_T1_pt_jesTotalDown(); // pt
     const float &MET_significance(); // MET significance
