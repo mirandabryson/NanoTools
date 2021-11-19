@@ -6236,6 +6236,12 @@ protected:
     float MET_phi_;
     TBranch *b_MET_phi_;
     bool loaded_MET_phi_;
+    float MET_T1_phi_;
+    TBranch *b_MET_T1_phi_;
+    bool loaded_MET_T1_phi_;
+    float METFixEE2017_T1_phi_;
+    TBranch *b_METFixEE2017_T1_phi_;
+    bool loaded_METFixEE2017_T1_phi_;
     float MET_pt_;
     TBranch *b_MET_pt_;
     bool loaded_MET_pt_;
@@ -9226,6 +9232,8 @@ public:
     const float &MET_fiducialGenPhi();
     const float &MET_fiducialGenPt();
     const float &MET_phi();
+    const float &MET_T1_phi();
+    const float &METFixEE2017_T1_phi();
     const float &MET_pt();
     const float &MET_T1_pt();
     const float &METFixEE2017_T1_pt();
@@ -11489,6 +11497,8 @@ namespace tas {
     const float &MET_fiducialGenPhi(); // phi
     const float &MET_fiducialGenPt(); // pt
     const float &MET_phi(); // phi
+    const float &MET_T1_phi(); // phi
+    const float &METFixEE2017_T1_phi(); // phi
     const float &MET_pt(); // pt
     const float &MET_T1_pt(); // pt
     const float &METFixEE2017_T1_pt(); // pt
