@@ -31,6 +31,7 @@ float get_sum_pt(Leptons &leps) {
 bool pass_lep_pt_eta(Lepton &lep) {
     // float minpt = lep.is_el() ? 25. : 20.;
     float minpt = 20.;
+    // float minpt = 30.;
 
     float maxeta = lep.is_el() ? 2.5 : 2.4;
     if (lep.pt() < minpt || fabs(lep.eta()) > maxeta) return false;
@@ -649,18 +650,18 @@ std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps, float min_jet_pt, float
         Jet jet(idx);
         if (std::fabs(jet.eta()) > 2.4) continue;
         if (jesVar==0 && jet.pt() < min_bjet_pt) continue;
-        if (jesVar==-1 && jet.pt_jesdown() < min_bjet_pt) continue;
-        if (jesVar==1 && jet.pt_jesup() < min_bjet_pt) continue;
+        // if (jesVar==-1 && jet.pt_jesdown() < min_bjet_pt) continue;
+        // if (jesVar==1 && jet.pt_jesup() < min_bjet_pt) continue;
         if (!jet.passJetId()) continue;
 
         if (jesVar==0 && jet.pt() > min_jet_pt) jets_.push_back(jet);
         else if (jesVar==0 && jet.pt() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
         
-        if (jesVar==-1 && jet.pt_jesdown() > min_jet_pt) jets_.push_back(jet);
-        else if (jesVar==-1 && jet.pt_jesdown() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
+        // if (jesVar==-1 && jet.pt_jesdown() > min_jet_pt) jets_.push_back(jet);
+        // else if (jesVar==-1 && jet.pt_jesdown() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
         
-        if (jesVar==1 && jet.pt_jesup() > min_jet_pt) jets_.push_back(jet);
-        else if (jesVar==1 && jet.pt_jesup() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
+        // if (jesVar==1 && jet.pt_jesup() > min_jet_pt) jets_.push_back(jet);
+        // else if (jesVar==1 && jet.pt_jesup() > min_bjet_pt && jet.isBtag()) jets_.push_back(jet);
     }
 
     Jets ret_jets_;
@@ -673,11 +674,11 @@ std::pair<Jets, Jets> getJets(std::vector<Lepton> &leps, float min_jet_pt, float
         if (jesVar==0 && jets_[idx].pt() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
         if (jesVar==0 && jets_[idx].pt() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
 
-        if (jesVar==-1 && jets_[idx].pt_jesdown() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
-        if (jesVar==-1 && jets_[idx].pt_jesdown() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
+        // if (jesVar==-1 && jets_[idx].pt_jesdown() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
+        // if (jesVar==-1 && jets_[idx].pt_jesdown() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
 
-        if (jesVar==1 && jets_[idx].pt_jesup() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
-        if (jesVar==1 && jets_[idx].pt_jesup() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
+        // if (jesVar==1 && jets_[idx].pt_jesup() > min_jet_pt) ret_jets_.push_back(jets_[idx]);
+        // if (jesVar==1 && jets_[idx].pt_jesup() > min_bjet_pt && jets_[idx].isBtag()) ret_bjets_.push_back(jets_[idx]);
     }
 
     return std::make_pair(ret_jets_,ret_bjets_);
