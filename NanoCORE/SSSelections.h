@@ -130,10 +130,10 @@ struct Jet {
         isData_ = nt.isData();
         id_ = nt.Jet_jetId()[idx_];
         pt_ = nt.Jet_pt()[idx_];
-        // if(!isData_){
-        //     pt_jesup_ = nt.Jet_pt_jesTotalUp()[idx_];
-        //     pt_jesdown_ = nt.Jet_pt_jesTotalDown()[idx_];
-        // }
+        if(!isData_){
+            pt_jesup_ = nt.Jet_pt_jesTotalUp()[idx_];
+            pt_jesdown_ = nt.Jet_pt_jesTotalDown()[idx_];
+        }
         eta_ = nt.Jet_eta()[idx_];
         phi_ = nt.Jet_phi()[idx_];
         p4_ = nt.Jet_p4()[idx_];
