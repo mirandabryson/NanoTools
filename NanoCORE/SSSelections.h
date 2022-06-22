@@ -155,6 +155,18 @@ struct Jet {
         else if (nt.year()==2018) {return bdisc()>0.2770;}
         else {return false;}
     }
+    bool istightb(){
+        if (nt.year()==2016) {return bdisc()>0.7221;}
+        else if (nt.year()==2017) {return bdisc()>0.7489;}
+        else if (nt.year()==2018) {return bdisc()>0.7221;}
+        else {return false;}
+    }
+    bool islooseb(){
+        if (nt.year()==2016) {return bdisc()>0.0614;}
+        else if (nt.year()==2017) {return bdisc()>0.0521;}
+        else if (nt.year()==2018) {return bdisc()>0.0614;}
+        else {return false;}
+    }
     int hadronFlavor() {return nt.Jet_hadronFlavour()[idx_];}
     int partonFlavor() {return nt.Jet_partonFlavour()[idx_];}
     bool passJetId() {return id_>1;}

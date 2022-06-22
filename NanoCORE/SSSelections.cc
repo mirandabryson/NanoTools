@@ -269,7 +269,7 @@ std::pair<int, Leptons> getBestHypFCNC(Leptons &leptons, bool verbose) {
                 if ( lep.is_loose() ) nloose += 1;
                 // remember to check for mass resonances
                 std::pair<int,int> z_mass_info = makesResonance(leptons,mlhyp[0],lep,91,15);
-                std::pair<int,int> gs_mass_info = makesResonance(leptons,mlhyp[0],lep,0,12);
+                std::pair<int,int> gs_mass_info = makesResonance(leptons,mlhyp[0],lep,0,12); //hadronic resonances
                 if (z_mass_info.first>=0 || gs_mass_info.first>=0) {
                   hyp1s.push_back(mlhyp);
                   break; // ok for now
