@@ -137,6 +137,7 @@ struct Jet {
         eta_ = nt.Jet_eta()[idx_];
         phi_ = nt.Jet_phi()[idx_];
         p4_ = nt.Jet_p4()[idx_];
+        mass_ = nt.Jet_mass()[idx_];
     }
     int id() { return id_; }
     bool is_btag() { return false; } // { return ((pt_ > 25.0) && (Jet_btagDeepB()[idx_] > 0.4941)); }
@@ -147,6 +148,7 @@ struct Jet {
     float pt_jesdown() { if(!isData_) {return pt_jesdown_;} else {return -1;} }
     float eta() { return eta_; }
     float phi() { return phi_; }
+    float mass() { return mass_; }
     float bdisc() {return nt.Jet_btagDeepFlavB()[idx_];}
     float cdisc() {return nt.Jet_btagDeepFlavC()[idx_];}
     bool isBtag() {
@@ -155,16 +157,16 @@ struct Jet {
         else if (nt.year()==2018) {return bdisc()>0.2770;}
         else {return false;}
     }
-    bool istightb(){
+    bool istightbtag(){
         if (nt.year()==2016) {return bdisc()>0.7221;}
         else if (nt.year()==2017) {return bdisc()>0.7489;}
-        else if (nt.year()==2018) {return bdisc()>0.7221;}
+        else if (nt.year()==2018) {return bdisc()>0.7264;}
         else {return false;}
     }
-    bool islooseb(){
+    bool isloosebtag(){
         if (nt.year()==2016) {return bdisc()>0.0614;}
         else if (nt.year()==2017) {return bdisc()>0.0521;}
-        else if (nt.year()==2018) {return bdisc()>0.0614;}
+        else if (nt.year()==2018) {return bdisc()>0.0494;}
         else {return false;}
     }
     int hadronFlavor() {return nt.Jet_hadronFlavour()[idx_];}
@@ -180,6 +182,7 @@ struct Jet {
     float pt_jesdown_ = 0.;
     float eta_ = 0.;
     float phi_ = 0.;
+    float mass_ = 0.;
     LorentzVector p4_;
     unsigned int idx_;
     bool isData_;
