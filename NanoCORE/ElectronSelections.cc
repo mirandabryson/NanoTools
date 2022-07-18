@@ -131,10 +131,10 @@ bool SS::passesElectronMVA(int idx, SS::ElectronMVAIDLevel id_level, int year) {
     float disc;
     switch (year) {
     case (2016):
-        disc = Electron_mvaSpring16GP().at(idx);
+        disc = electronMVA94X(idx);
         break;
     case (2017):
-        disc = Electron_mvaFall17V1noIso().at(idx);
+        disc = electronMVA94X(idx);
         break;
     case (2018):
         disc = electronMVA94X(idx);
